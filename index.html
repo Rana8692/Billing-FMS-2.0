@@ -48,7 +48,7 @@
             right: 15px;
             display: flex;
             align-items: center;
-            gap: 8px; 
+            gap: 6px; 
             z-index: 10; 
         }
         .modal-control-button {
@@ -72,6 +72,8 @@
         .modal-control-button.delete-btn:hover svg { fill: #dc2626; }
         .modal-control-button.close-btn svg { fill: #9ca3af; }
         .modal-control-button.close-btn:hover svg { fill: #374151; }
+         .modal-control-button.close-lost-btn svg { fill: #9ca3af; }
+        .modal-control-button.close-lost-btn:hover svg { fill: #f97316; } 
         .modal-control-button:hover { background-color: #e5e7eb; }
 
         .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -111,6 +113,7 @@
         .delay-ontime { color: #10b981; font-weight: 500; }
         .delay-late { color: #dc2626; font-weight: 500; }
         .delay-early { color: #3b82f6; font-weight: 500; }
+        .overdue-task { color: #dc2626; font-weight: bold; } 
 
         #entryDetailsModal .crm-card { background: #fff; }
         #entryDetailsModal .crm-card h2 { margin-bottom: 16px; font-size: 1.25rem; color: #2c3e50; font-weight: 600; }
@@ -135,6 +138,47 @@
         .timeline-details-grid .details-value { font-size: 0.85rem; }
         .timeline-step .btn-take-action { margin-top: 0.75rem; padding: 0.375rem 0.75rem; font-size: 0.875rem; }
 
+        .sortable-header { cursor: pointer; position: relative; padding-right: 20px; }
+        .sortable-header::after { content: ''; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font-size: 0.8em; opacity: 0.5;}
+        .sortable-header.sort-asc::after { content: '▲'; opacity: 1; }
+        .sortable-header.sort-desc::after { content: '▼'; opacity: 1; }
+
+        .scorecard-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;}
+        .scorecard { background-color: white; padding: 1.25rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); text-align: center;}
+        .scorecard-title { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 500; }
+        .scorecard-value { font-size: 2.25rem; font-weight: 700; color: #1f2937; }
+        .scorecard.total-entries .scorecard-value { color: #4f46e5; }
+        .scorecard.pending-confirmation .scorecard-value { color: #f59e0b; }
+        .scorecard.awaiting-bill-prep .scorecard-value { color: #84cc16; }
+        .scorecard.invoice-generated .scorecard-value { color: #3b82f6; }
+        .scorecard.payment-followup .scorecard-value { color: #a855f7; }
+        .scorecard.payment-completed .scorecard-value { color: #10b981; }
+
+        /* Distinct Status Badge Styles */
+        .status-badge {
+            padding: 0.25em 0.6em;
+            border-radius: 0.25rem; 
+            font-size: 0.75rem; 
+            font-weight: 500; 
+            text-align: center;
+            display: inline-block;
+            min-width: 120px; 
+            color: white; 
+        }
+        .status-entry-added-awaiting-customer-confirmation { background-color: #fbbf24; /* Amber-400 */ color: #78350f; /* Amber-900 */ }
+        .status-customer-confirmed-awaiting-bill-prep { background-color: #a3e635; /* Lime-400 */ color: #3f6212; /* Lime-800 */ }
+        .status-bill-prepared-awaiting-invoice-generation { background-color: #67e8f9; /* Cyan-300 */ color: #155e75; /* Cyan-800 */ }
+        .status-invoice-generated-awaiting-bill-receiving-followup { background-color: #60a5fa; /* Blue-400 */ color: #1e3a8a; /* Blue-800 */ }
+        .status-bill-followed-up-awaiting-payment-followup { background-color: #818cf8; /* Indigo-400 */ color: #3730a3; /* Indigo-800 */ }
+        .status-payment-followed-up-awaiting-payment-receive { background-color: #c084fc; /* Purple-400 */ color: #581c87; /* Purple-800 */ }
+        .status-payment-received-awaiting-next-action { background-color: #34d399; /* Emerald-400 */ color: #065f46; /* Emerald-800 */ }
+        .status-due-followed-up-awaiting-payment-arrangement { background-color: #f472b6; /* Pink-400 */ color: #831843; /* Pink-800 */ }
+        .status-payment-arrangement-made-awaiting-payment-completion { background-color: #fb7185; /* Rose-400 */ color: #881337; /* Rose-800 */ }
+        .status-payment-completed { background-color: #14b8a6; /* Teal-500 */ color: white;}
+        .status-closed-lost { background-color: #ef4444; /* Red-500 */ color: white; }
+        .status-default { background-color: #9ca3af; color: white; /* Gray-400 */ }
+
+
         @media screen and (max-width: 768px) {
             .responsive-table thead { display: none; }
             .responsive-table tr { display: block; margin-bottom: 0.625em; border-radius: 0.375rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06); border: 1px solid #e5e7eb;}
@@ -144,6 +188,7 @@
             .responsive-table.doer-info-table td { padding-left: 40% !important; }
             .responsive-table.doer-info-table td::before { width: 35%; }
             .main-action-buttons button { width: 100%; margin-bottom: 0.5rem;} 
+            .scorecard-container { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));} 
         }
     </style>
 </head>
@@ -164,6 +209,37 @@
                 Add Entry (S1)
             </button>
         </div>
+
+        <section id="scorecardSection" class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Overview Scorecards</h2>
+            <div class="scorecard-container">
+                <div class="scorecard total-entries">
+                    <div class="scorecard-title">Total Bills</div>
+                    <div class="scorecard-value" id="scorecardTotalEntries">0</div>
+                </div>
+                <div class="scorecard pending-confirmation">
+                    <div class="scorecard-title">Pending Confirmation</div>
+                    <div class="scorecard-value" id="scorecardPendingConfirmation">0</div>
+                </div>
+                <div class="scorecard awaiting-bill-prep">
+                    <div class="scorecard-title">Awaiting Bill Prep</div>
+                    <div class="scorecard-value" id="scorecardAwaitingBillPrep">0</div>
+                </div>
+                <div class="scorecard invoice-generated">
+                    <div class="scorecard-title">Invoice Generated</div>
+                    <div class="scorecard-value" id="scorecardInvoiceGenerated">0</div>
+                </div>
+                 <div class="scorecard payment-followup">
+                    <div class="scorecard-title">Payment Followup</div>
+                    <div class="scorecard-value" id="scorecardPaymentFollowup">0</div>
+                </div>
+                <div class="scorecard payment-completed">
+                    <div class="scorecard-title">Payment Completed</div>
+                    <div class="scorecard-value" id="scorecardPaymentCompleted">0</div>
+                </div>
+            </div>
+        </section>
+
 
         <div id="addEntrySectionModal" class="modal"><div class="modal-content-wrapper">
             <section class="modal-content bg-gray-50"><span id="closeEntryFormModalButton" class="close-button">&times;</span>
@@ -236,17 +312,9 @@
             <div id="tableStatus" class="text-center p-4 text-gray-500">Loading entries...</div>
             <div class="table-container overflow-x-auto bg-white rounded-lg shadow">
                 <table class="min-w-full divide-y divide-gray-200 responsive-table">
-                    <thead class="bg-gray-50">
+                    <thead id="entriesTableHead" class="bg-gray-50">
                         <tr>
-                            <th class="px-3 py-3 text-left text-xs font-medium">UID</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium">Timestamp (S1)</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium">Billing Name</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium">Status</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium">Category</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium">Assigned By</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium">Next Planned Action</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium">Actions</th>
-                        </tr>
+                            </tr>
                     </thead>
                     <tbody id="entriesTableBody" class="bg-white divide-y divide-gray-200"></tbody>
                 </table>
@@ -260,17 +328,21 @@
             <span class="close-button" onclick="closeAlertModal()">&times;</span> 
             <p id="modalMessage" class="text-gray-700 text-center"></p>
             <div class="mt-6 text-center default-modal-buttons"><button onclick="closeAlertModal()" class="btn btn-primary">OK</button></div>
-            <div class="mt-6 flex justify-center space-x-3 confirm-buttons" style="display:none;"><button id="modalCancelButton" class="btn btn-secondary">Cancel</button><button id="modalConfirmButton" class="btn btn-danger">Confirm Delete</button></div>
+            <div class="mt-6 flex justify-center space-x-3 confirm-buttons" style="display:none;"><button id="modalCancelButton" class="btn btn-secondary">Cancel</button><button id="modalConfirmButton" class="btn btn-danger">Confirm</button></div>
+            <div class="mt-6 flex justify-center space-x-3 custom-choice-buttons" style="display:none;">
+                </div>
         </div>
     </div></div>
 
     <script>
         // --- CONFIGURATION & GLOBAL VARS ---
-        const SCRIPT_URL = 'https://sheetdb.io/api/v1/nydthm8eqg4w4'; // Replaced with SheetDB URL
+        const SCRIPT_URL = 'https://sheetdb.io/api/v1/nydthm8eqg4w4'; 
         const ITEMS_PER_PAGE = 10;
         let currentPage = 1;
         let allEntries = [];
-        let nextUidNumber = 1; // This will be primarily for display if SheetDB handles actual unique IDs
+        let nextUidNumber = 1; 
+        let currentSortColumn = 'systemTimestamp'; 
+        let currentSortDirection = 'desc'; 
 
         const STEP_LEAD_TIMES = { 
             customerConfirmation: 2, billPreparation: 1, invoiceGeneration: 1, billReceivingFollowup: 2,
@@ -278,12 +350,17 @@
         };
 
         const STATUS_MAP = {
-            STEP1_COMPLETE: "Pending Customer Confirmation", STEP2_COMPLETE: "Customer Confirmed - Awaiting Bill Prep",
-            STEP3_COMPLETE: "Bill Prepared", STEP4_COMPLETE: "Invoice Generated",
-            STEP5_COMPLETE: "Bill Receiving Followed Up", STEP6_COMPLETE: "Payment Followed Up",
-            STEP7_COMPLETE: "Payment Received", STEP8_COMPLETE: "Due Followed Up",
-            STEP9_COMPLETE: "Payment Arrangement Made", STEP10_COMPLETE: "Payment Completed",
-            CLOSED_WON: "Closed - Won", CLOSED_LOST: "Closed - Lost" 
+            STEP1_COMPLETE: "Entry Added - Awaiting Customer Confirmation",
+            STEP2_COMPLETE: "Customer Confirmed - Awaiting Bill Prep",
+            STEP3_COMPLETE: "Bill Prepared - Awaiting Invoice Generation",
+            STEP4_COMPLETE: "Invoice Generated - Awaiting Bill Receiving Followup",
+            STEP5_COMPLETE: "Bill Followed Up - Awaiting Payment Followup",
+            STEP6_COMPLETE: "Payment Followed Up - Awaiting Payment Receive",
+            STEP7_COMPLETE: "Payment Received - Awaiting Next Action", 
+            STEP8_COMPLETE: "Due Followed Up - Awaiting Payment Arrangement",
+            STEP9_COMPLETE: "Payment Arrangement Made - Awaiting Payment Completion",
+            STEP10_COMPLETE: "Payment Completed",
+            CLOSED_LOST: "Closed - Lost" 
         };
         
         const STEP_NAMES = {
@@ -299,11 +376,23 @@
             invoiceGeneration:  { nextStepKey: 'billReceivingFollowup', newStatus: STATUS_MAP.STEP4_COMPLETE, buttonClass: 'btn-info', buttonText: 'Generate Invoice (S4)' },
             billReceivingFollowup: { nextStepKey: 'paymentFollowup', newStatus: STATUS_MAP.STEP5_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Bill Followup Done (S5)' },
             paymentFollowup:    { nextStepKey: 'paymentReceive', newStatus: STATUS_MAP.STEP6_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Payment Followup Done (S6)' },
-            paymentReceive:     { nextStepKey: 'dueFollowup', newStatus: STATUS_MAP.STEP7_COMPLETE, buttonClass: 'btn-success', buttonText: 'Payment Received (S7)' },
+            paymentReceive:     { nextStepKey: 'dueFollowup', newStatus: STATUS_MAP.STEP7_COMPLETE, buttonClass: 'btn-success', buttonText: 'Process Payment (S7)' }, 
             dueFollowup:        { nextStepKey: 'paymentArrangement', newStatus: STATUS_MAP.STEP8_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Due Followup Done (S8)' },
             paymentArrangement: { nextStepKey: 'paymentCompletion', newStatus: STATUS_MAP.STEP9_COMPLETE, buttonClass: 'btn-warning', buttonText: 'Arrangement Made (S9)' },
             paymentCompletion:  { nextStepKey: null, newStatus: STATUS_MAP.STEP10_COMPLETE, buttonClass: 'btn-success', buttonText: 'Complete Payment (S10)' }
         };
+        
+        const tableHeadersConfig = [
+            { key: 'uid', label: 'UID', sortable: true },
+            { key: 'actualTimestamp_entry', label: 'Timestamp (S1)', sortable: true, isDate: true },
+            { key: 'billingName', label: 'Billing Name', sortable: true },
+            { key: 'status', label: 'Status', sortable: true },
+            { key: 'category', label: 'Category', sortable: true },
+            { key: 'assignedBy', label: 'Assigned By', sortable: true },
+            { key: 'nextPlannedActionOn', label: 'Next Planned On', sortable: true, isDate: true, customRender: (entry) => getNextPlannedActionTimestamp(entry) },
+            { key: 'actions', label: 'Actions', sortable: false }
+        ];
+
 
         // --- DOM ELEMENTS ---
         const entryForm = document.getElementById('billingEntryForm');
@@ -334,12 +423,23 @@
         const confirmModalButtons = messageAlertModal.querySelector('.confirm-buttons');
         const modalConfirmButton = document.getElementById('modalConfirmButton');
         const modalCancelButton = document.getElementById('modalCancelButton');
+        const customChoiceButtonsContainer = messageAlertModal.querySelector('.custom-choice-buttons');
 
+
+        const entriesTableHead = document.getElementById('entriesTableHead'); 
         const entriesTableBody = document.getElementById('entriesTableBody');
         const tableStatus = document.getElementById('tableStatus');
         const refreshButton = document.getElementById('refreshButton');
         const searchInput = document.getElementById('searchInput');
         const paginationControls = document.getElementById('paginationControls');
+
+        const scorecardTotalEntries = document.getElementById('scorecardTotalEntries');
+        const scorecardPendingConfirmation = document.getElementById('scorecardPendingConfirmation');
+        const scorecardAwaitingBillPrep = document.getElementById('scorecardAwaitingBillPrep');
+        const scorecardInvoiceGenerated = document.getElementById('scorecardInvoiceGenerated');
+        const scorecardPaymentFollowup = document.getElementById('scorecardPaymentFollowup');
+        const scorecardPaymentCompleted = document.getElementById('scorecardPaymentCompleted');
+
 
         // --- MODAL CONTROL FUNCTIONS ---
         function openModal(modalElement) { modalElement.style.display = "block"; }
@@ -349,7 +449,7 @@
         function openDoerModal() { openModal(doerInfoModal); }
         
         function openEntryDetailsModal(entryId) {
-            const entry = allEntries.find(e => e.id === entryId); // Assuming SheetDB returns an 'id' or you map it
+            const entry = allEntries.find(e => e.id === entryId); 
             if (!entry) {
                 showUserAlert("Error: Could not find entry details.", "error");
                 return;
@@ -360,10 +460,43 @@
             openModal(entryDetailsModal);
         }
 
-        function showUserAlert(message, type = 'info') { 
-            modalMessage.textContent = message; openModal(messageAlertModal);
-            defaultModalButtons.style.display = (type === 'confirm') ? 'none' : 'block';
-            confirmModalButtons.style.display = (type === 'confirm') ? 'flex' : 'none';
+        function showUserAlert(message, type = 'info', onConfirm = null, customButtons = null) {
+            modalMessage.textContent = message;
+            openModal(messageAlertModal);
+
+            defaultModalButtons.style.display = 'none';
+            confirmModalButtons.style.display = 'none';
+            customChoiceButtonsContainer.style.display = 'none';
+            customChoiceButtonsContainer.innerHTML = ''; 
+
+            if (type === 'confirm' && onConfirm) {
+                confirmModalButtons.style.display = 'flex';
+                modalConfirmButton.textContent = 'Confirm'; 
+                modalConfirmButton.onclick = () => { onConfirm(); }; 
+                modalCancelButton.onclick = closeAlertModal;
+            } else if (type === 'choice' && customButtons) {
+                customChoiceButtonsContainer.style.display = 'flex';
+                customButtons.forEach(btnConfig => {
+                    const button = document.createElement('button');
+                    button.textContent = btnConfig.text;
+                    button.className = `btn ${btnConfig.class || 'btn-secondary'} ml-2`; 
+                    button.onclick = () => {
+                        closeAlertModal(); 
+                        btnConfig.handler();
+                    };
+                    customChoiceButtonsContainer.appendChild(button);
+                });
+                const cancelBtnChoice = document.createElement('button');
+                cancelBtnChoice.textContent = "Cancel";
+                cancelBtnChoice.className = "btn btn-secondary ml-2";
+                cancelBtnChoice.onclick = closeAlertModal;
+                customChoiceButtonsContainer.insertBefore(cancelBtnChoice, customChoiceButtonsContainer.firstChild);
+
+
+            } else { 
+                defaultModalButtons.style.display = 'block';
+            }
+            
             modalMessage.classList.remove('text-green-600', 'text-red-600');
             if (type === 'success') modalMessage.classList.add('text-green-600');
             if (type === 'error') modalMessage.classList.add('text-red-600');
@@ -377,31 +510,81 @@
         
         // --- UTILITY FUNCTIONS ---
         function setButtonLoading(isLoading, button = submitButton, spinner = loadingSpinner) {
+            if (!button) return;
             button.disabled = isLoading; button.classList.toggle('opacity-50', isLoading);
             if (spinner) spinner.classList.toggle('hidden', !isLoading);
         }
-        function formatDateForDisplay(dateTimeString) {
-            if (!dateTimeString) return 'N/A'; const date = new Date(dateTimeString);
-            if (isNaN(date.getTime())) return dateTimeString; 
-            return date.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+
+        function formatDateForDisplay(dateTimeStringOrObject) {
+            if (!dateTimeStringOrObject || dateTimeStringOrObject === 'N/A') return 'N/A';
+            let date;
+            if (dateTimeStringOrObject instanceof Date) {
+                date = dateTimeStringOrObject;
+            } else {
+                const customFormatRegex = /^(\d{2})-([A-Za-z]{3})-(\d{4}) (\d{2}):(\d{2}):(\d{2}) (AM|PM)$/;
+                const match = typeof dateTimeStringOrObject === 'string' ? dateTimeStringOrObject.match(customFormatRegex) : null;
+                if (match) {
+                    const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+                    let hours = parseInt(match[4], 10);
+                    if (match[7] === 'PM' && hours < 12) hours += 12;
+                    if (match[7] === 'AM' && hours === 12) hours = 0; 
+                    date = new Date(match[3], months[match[2]], match[1], hours, match[5], match[6]);
+                } else {
+                    date = new Date(dateTimeStringOrObject); 
+                }
+            }
+
+            if (isNaN(date.getTime())) {
+                return dateTimeStringOrObject.toString(); 
+            }
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const day = String(date.getDate()).padStart(2, '0');
+            const monthName = months[date.getMonth()];
+            const year = date.getFullYear();
+            let hours = date.getHours();
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            const strHours = String(hours).padStart(2, '0');
+            return `${day}-${monthName}-${year} ${strHours}:${minutes}:${seconds} ${ampm}`;
         }
+
          function formatDateForInput(date) { 
             if (!(date instanceof Date) || isNaN(date.getTime())) {
-                console.warn("formatDateForInput received an invalid date:", date, "Using current date as fallback.");
                 date = new Date(); 
             }
             const offset = date.getTimezoneOffset();
             const adjustedDate = new Date(date.getTime() - (offset*60*1000));
             return adjustedDate.toISOString().slice(0,16); 
         }
-        function addDays(date, days) {
-            const result = new Date(date);
+        function addDays(dateInput, days) { 
+            const result = new Date(dateInput); 
             result.setDate(result.getDate() + days);
             return result;
         }
         function calculateTimeDelay(actualTimestamp, plannedTimestamp) {
-            if (!actualTimestamp || !plannedTimestamp) return "<span class='text-gray-400'>N/A</span>";
-            const actual = new Date(actualTimestamp); const planned = new Date(plannedTimestamp);
+            if (!actualTimestamp || !plannedTimestamp || actualTimestamp === "N/A" || plannedTimestamp === "N/A" || actualTimestamp === "SKIPPED" || plannedTimestamp === "SKIPPED") return "<span class='text-gray-400'>N/A</span>";
+            
+            const parseCustomDateString = (dateStr) => {
+                if (!dateStr || typeof dateStr !== 'string') return null;
+                const parts = dateStr.match(/(\d{2})-([A-Za-z]{3})-(\d{4}) (\d{2}):(\d{2}):(\d{2}) (AM|PM)/);
+                if (!parts) return new Date(dateStr); 
+                const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+                let hours = parseInt(parts[4], 10);
+                if (parts[7] === 'PM' && hours < 12) hours += 12;
+                if (parts[7] === 'AM' && hours === 12) hours = 0; 
+                return new Date(parts[3], months[parts[2]], parts[1], hours, parts[5], parts[6]);
+            };
+
+            const actual = (actualTimestamp instanceof Date) ? actualTimestamp : parseCustomDateString(actualTimestamp);
+            const planned = (plannedTimestamp instanceof Date) ? plannedTimestamp : parseCustomDateString(plannedTimestamp);
+
+            if (!actual || isNaN(actual.getTime()) || !planned || isNaN(planned.getTime())) {
+                 return "<span class='text-gray-400'>Invalid Date</span>";
+            }
+
             const diff = actual.getTime() - planned.getTime();
             const d = Math.floor(diff/(1000*60*60*24)), h = Math.floor((diff%(1000*60*60*24))/(1000*60*60)), m = Math.floor((diff%(1000*60*60))/(1000*60));
             let delayClass = 'delay-ontime'; let delayText = "On Time";
@@ -415,8 +598,6 @@
             return `<span class="${delayClass}">${delayText}</span>`;
         }
         function generateAndSetNextUid() {
-            // This function might need adjustment if SheetDB provides a reliable way to get the last UID
-            // For now, it bases it on the currently fetched entries.
             let maxNum = 0;
             allEntries.forEach(e => { 
                 if (e.uid && e.uid.startsWith('UID')) { 
@@ -437,9 +618,104 @@
             requirementError.classList.toggle('hidden', chx.length > 0); return chx.length > 0;
         }
 
+        // --- SCORECARD FUNCTIONS ---
+        function renderScorecards(entries) {
+            scorecardTotalEntries.textContent = entries.length;
+            scorecardPendingConfirmation.textContent = entries.filter(e => e.status === STATUS_MAP.STEP1_COMPLETE).length;
+            scorecardAwaitingBillPrep.textContent = entries.filter(e => e.status === STATUS_MAP.STEP2_COMPLETE).length;
+            scorecardInvoiceGenerated.textContent = entries.filter(e => e.status === STATUS_MAP.STEP4_COMPLETE).length;
+            scorecardPaymentFollowup.textContent = entries.filter(e => e.status === STATUS_MAP.STEP6_COMPLETE).length;
+            scorecardPaymentCompleted.textContent = entries.filter(e => e.status === STATUS_MAP.STEP10_COMPLETE).length;
+        }
+
+        // --- TABLE SORTING FUNCTIONS ---
+        function initializeTableHeaders() {
+            const headerRow = entriesTableHead.querySelector('tr') || entriesTableHead.appendChild(document.createElement('tr'));
+            headerRow.innerHTML = ''; 
+
+            tableHeadersConfig.forEach(config => {
+                const th = document.createElement('th');
+                th.className = 'px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th.textContent = config.label;
+                if (config.sortable) {
+                    th.classList.add('sortable-header');
+                    th.dataset.sortKey = config.key;
+                    th.dataset.isDate = config.isDate || false;
+                     if(config.customRender) th.dataset.customRender = 'true';
+                    th.addEventListener('click', () => handleSort(config.key));
+                     if (config.key === currentSortColumn) { 
+                        th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                    }
+                }
+                headerRow.appendChild(th);
+            });
+        }
+        
+        function handleSort(sortKey) {
+            if (currentSortColumn === sortKey) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = sortKey;
+                currentSortDirection = 'asc';
+            }
+            applySorting();
+            renderTable(allEntries); 
+        }
+
+        function applySorting() {
+            const sortConfig = tableHeadersConfig.find(h => h.key === currentSortColumn);
+            const isDateSort = sortConfig && sortConfig.isDate;
+            const hasCustomRender = sortConfig && sortConfig.customRender;
+
+            allEntries.sort((a, b) => {
+                let valA = hasCustomRender ? sortConfig.customRender(a).text : a[currentSortColumn];
+                let valB = hasCustomRender ? sortConfig.customRender(b).text : b[currentSortColumn];
+
+                if (valA === null || valA === undefined || valA === 'N/A') valA = currentSortDirection === 'asc' ? Infinity : -Infinity;
+                if (valB === null || valB === undefined || valB === 'N/A') valB = currentSortDirection === 'asc' ? Infinity : -Infinity;
+                
+                if (isDateSort) {
+                    const parseCustomDate = (dateStr) => {
+                        if (!dateStr || typeof dateStr !== 'string' || dateStr === 'N/A') return null;
+                        const parts = dateStr.match(/(\d{2})-([A-Za-z]{3})-(\d{4}) (\d{2}):(\d{2}):(\d{2}) (AM|PM)/);
+                        if (!parts) return new Date(dateStr); 
+                        const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+                        let hours = parseInt(parts[4], 10);
+                        if (parts[7] === 'PM' && hours < 12) hours += 12;
+                        if (parts[7] === 'AM' && hours === 12) hours = 0; 
+                        return new Date(parts[3], months[parts[2]], parts[1], hours, parts[5], parts[6]);
+                    };
+                    valA = parseCustomDate(valA);
+                    valB = parseCustomDate(valB);
+                    if (valA === null) valA = currentSortDirection === 'asc' ? Infinity : -Infinity;
+                    if (valB === null) valB = currentSortDirection === 'asc' ? Infinity : -Infinity;
+                } else if (typeof valA === 'string' && typeof valB === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                } else if (!isNaN(parseFloat(valA)) && !isNaN(parseFloat(valB))) {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                }
+
+                if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            entriesTableHead.querySelectorAll('.sortable-header').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.sortKey === currentSortColumn) {
+                    th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+        }
+
+
         // --- EVENT LISTENERS & INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            fetchEntries(); gstNumberInput.disabled = true; gstNumberInput.parentElement.classList.add('opacity-50');
+            initializeTableHeaders(); 
+            fetchEntries(); 
+            gstNumberInput.disabled = true; gstNumberInput.parentElement.classList.add('opacity-50');
             openEntryFormModalButton.addEventListener('click', openFormModal);
             closeEntryFormModalButton.addEventListener('click', () => closeModal(addEntrySectionModal));
             openDoerInfoModalButton.addEventListener('click', openDoerModal);
@@ -461,38 +737,32 @@
             formData.forEach((v,k) => { if (!k.startsWith('requirement_')) entryData[k] = v; });
             const reqs = []; entryForm.querySelectorAll('input[name^="requirement_"]:checked').forEach(cb => reqs.push(cb.value));
             entryData.requirement = reqs.join(', '); 
-            entryData.systemTimestamp = new Date().toISOString(); 
+            
+            entryData.id = `entry-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             entryData.uid = uidField.value; 
             entryData.status = STATUS_MAP.STEP1_COMPLETE; 
             
-            // Add a placeholder for 'id' if your sheet expects it, SheetDB might ignore it or use it
-            // Or, if SheetDB auto-generates an ID and you need it, you'll get it on the next fetch
-            entryData.id = `TEMP-${Date.now()}`; // Temporary ID, will be overwritten by SheetDB or next fetch
-
-            entryData.actualTimestamp_entry = entryData.entryTimestamp; 
-            entryData.plannedTimestamp_customerConfirmation = formatDateForInput(addDays(new Date(entryData.actualTimestamp_entry), STEP_LEAD_TIMES.customerConfirmation));
+            const entryTimestampDate = new Date(entryTimestampField.value); 
+            entryData.actualTimestamp_entry = formatDateForDisplay(entryTimestampDate); 
+            entryData.systemTimestamp = formatDateForDisplay(new Date());
+            entryData.plannedTimestamp_customerConfirmation = formatDateForDisplay(addDays(entryTimestampDate, STEP_LEAD_TIMES.customerConfirmation));
+            
             Object.keys(STEP_LEAD_TIMES).forEach(stepKey => { 
                  if (stepKey !== 'customerConfirmation') entryData[`plannedTimestamp_${stepKey}`] = null;
                  entryData[`actualTimestamp_${stepKey}`] = null;
                  entryData[`timeDelay_${stepKey}`] = null;
             });
+            entryData.isFullPaymentReceived = null; 
             
-            // Remove temporary ID before sending if SheetDB auto-generates
-            // delete entryData.id; 
-            // Or, if your sheet has an 'id' column and you want to suggest one (SheetDB might override)
-            // entryData.id = Utilities.getUuid(); // This won't work client-side directly
-
             try {
                 const res = await fetch(SCRIPT_URL, { 
                     method:'POST', 
                     headers:{'Content-Type':'application/json'}, 
-                    body:JSON.stringify({data: [entryData]}) // SheetDB expects data to be an array of objects
+                    body:JSON.stringify({data: [entryData]}) 
                 });
-                // SheetDB usually returns 201 Created on success for single row, or 200 for batch
                 if (res.ok) { 
-                    const result = await res.json(); // SheetDB might return { "created": 1 } or similar
                     showUserAlert('Entry added successfully to SheetDB! Status: ' + STATUS_MAP.STEP1_COMPLETE, 'success'); 
-                    fetchEntries(); // Refresh data to get the actual entry from the sheet
+                    fetchEntries(); 
                     closeModal(addEntrySectionModal); 
                 } else { 
                     const errorResult = await res.json().catch(() => ({ message: 'Unknown error, unable to parse response.' }));
@@ -507,71 +777,133 @@
         });
 
         refreshButton.addEventListener('click', fetchEntries);
-        searchInput.addEventListener('input', () => { currentPage = 1; renderTable(allEntries); });
+        searchInput.addEventListener('input', () => { currentPage = 1; applySorting(); renderTable(allEntries); });
 
-        async function processStepCompletion(entryId, buttonElement, currentStepKey, nextStepKey, newStatus) {
-            setButtonLoading(true, buttonElement, null); 
+
+        async function processStepCompletion(entryId, buttonElement, currentStepKey, defaultNextStepKey, defaultNewStatus, options = {}) {
+            setButtonLoading(true, buttonElement, null);
             const entryIdx = allEntries.findIndex(e => e.id === entryId);
-            if (entryIdx === -1) { 
-                showUserAlert('Error: Entry not found for update.', 'error'); 
-                setButtonLoading(false, buttonElement, null); 
-                return; 
+            if (entryIdx === -1) {
+                showUserAlert('Error: Entry not found for update.', 'error');
+                setButtonLoading(false, buttonElement, null);
+                return;
             }
 
             const now = new Date();
-            const entryToUpdate = { ...allEntries[entryIdx] }; // Get a copy of the current entry state
+            const entryToUpdateLocally = { ...allEntries[entryIdx] }; 
 
-            // Prepare the fields that are changing for this specific step update
-            const dataToUpdatePayload = { 
-                status: newStatus,
-                [`actualTimestamp_${currentStepKey}`]: now.toISOString()
+            const dataToUpdatePayload = {
+                status: defaultNewStatus, 
+                [`actualTimestamp_${currentStepKey}`]: formatDateForDisplay(now)
             };
-            if (entryToUpdate[`plannedTimestamp_${currentStepKey}`]) {
-                dataToUpdatePayload[`timeDelay_${currentStepKey}`] = calculateTimeDelay(now, new Date(entryToUpdate[`plannedTimestamp_${currentStepKey}`])).replace(/<[^>]*>?/gm, '');
+
+            if (entryToUpdateLocally[`plannedTimestamp_${currentStepKey}`]) {
+                 const plannedDate = new Date(entryToUpdateLocally[`plannedTimestamp_${currentStepKey}`].replace(/-/g, " ").replace(" AM", "").replace(" PM", ""));
+                 if (!isNaN(plannedDate.getTime())) {
+                    dataToUpdatePayload[`timeDelay_${currentStepKey}`] = calculateTimeDelay(now, plannedDate).replace(/<[^>]*>?/gm, '');
+                 } else {
+                    dataToUpdatePayload[`timeDelay_${currentStepKey}`] = "N/A";
+                 }
             }
-            if (nextStepKey && STEP_LEAD_TIMES[nextStepKey]) { 
-                dataToUpdatePayload[`plannedTimestamp_${nextStepKey}`] = formatDateForInput(addDays(now, STEP_LEAD_TIMES[nextStepKey]));
+
+            if (options.skipSteps && options.directToStepKey && options.directToStepNewStatus) {
+                options.skipSteps.forEach(stepToSkip => {
+                    dataToUpdatePayload[`plannedTimestamp_${stepToSkip}`] = "SKIPPED";
+                    dataToUpdatePayload[`actualTimestamp_${stepToSkip}`] = "SKIPPED";
+                    dataToUpdatePayload[`timeDelay_${stepToSkip}`] = "SKIPPED";
+                });
+                dataToUpdatePayload[`plannedTimestamp_${options.directToStepKey}`] = formatDateForDisplay(addDays(now, STEP_LEAD_TIMES[options.directToStepKey]));
+                dataToUpdatePayload.status = options.directToStepNewStatus; 
+                entryToUpdateLocally.isFullPaymentReceived = true; 
+                dataToUpdatePayload.isFullPaymentReceived = true; 
+            } else if (defaultNextStepKey && STEP_LEAD_TIMES[defaultNextStepKey]) {
+                dataToUpdatePayload[`plannedTimestamp_${defaultNextStepKey}`] = formatDateForDisplay(addDays(now, STEP_LEAD_TIMES[defaultNextStepKey]));
+                 if(currentStepKey === 'paymentReceive' && !options.skipSteps) { 
+                    entryToUpdateLocally.isFullPaymentReceived = false;
+                    dataToUpdatePayload.isFullPaymentReceived = false;
+                 }
+            } else if (!defaultNextStepKey && defaultNewStatus === STATUS_MAP.STEP10_COMPLETE) {
+                // Final step (S10) completion
             }
-            
+
+
             try {
-                // SheetDB uses PUT to SCRIPT_URL/column_to_match/value_to_match
-                // Assuming 'id' is the column to match and entryId is its value
                 const updateUrl = `${SCRIPT_URL}/id/${entryId}`;
-                const res = await fetch(updateUrl, { 
-                    method:'PUT', 
-                    headers:{'Content-Type':'application/json'}, 
-                    body:JSON.stringify({data: dataToUpdatePayload }) // SheetDB expects data to be an object for update
+                const res = await fetch(updateUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: dataToUpdatePayload })
                 });
 
-                if (res.ok) { 
-                    const result = await res.json(); // SheetDB might return { "updated": 1 }
-                    showUserAlert(`Entry ${entryToUpdate.uid} status updated to "${newStatus}"!`, 'success');
-                    
-                    // Update local entry immediately for UI responsiveness
-                    Object.assign(allEntries[entryIdx], dataToUpdatePayload); // Merge changes into local copy
-                     if (nextStepKey && STEP_LEAD_TIMES[nextStepKey]) { // Also update the next planned timestamp locally
-                        allEntries[entryIdx][`plannedTimestamp_${nextStepKey}`] = dataToUpdatePayload[`plannedTimestamp_${nextStepKey}`];
+                if (res.ok) {
+                    showUserAlert(`Entry ${entryToUpdateLocally.uid} status updated to "${dataToUpdatePayload.status}"!`, 'success');
+                    Object.assign(allEntries[entryIdx], dataToUpdatePayload);
+                     if (dataToUpdatePayload.hasOwnProperty('isFullPaymentReceived')) {
+                        allEntries[entryIdx].isFullPaymentReceived = dataToUpdatePayload.isFullPaymentReceived;
                     }
-
-
-                    renderTable(allEntries); 
+                    applySorting(); renderTable(allEntries);
                     if (entryDetailsModal.style.display === "block") {
-                        const currentModalEntryUid = detailsModalTitle.textContent.split(" - ")[1];
-                        if (entryToUpdate.uid === currentModalEntryUid) {
-                           populateDetailsModal(allEntries[entryIdx]); // Refresh the currently open details modal with updated local data
-                        }
+                         const currentModalEntry = allEntries.find(e => e.id === entryId);
+                         if(currentModalEntry) populateDetailsModal(currentModalEntry);
                     }
-                } else { 
-                    const errorResult = await res.json().catch(() => ({ message: 'Unknown error, unable to parse response.' }));
-                    showUserAlert('Error updating status in SheetDB: ' + (errorResult.error || errorResult.message || res.statusText), 'error'); 
+                } else {
+                    const errorResult = await res.json().catch(() => ({ message: 'Unknown error' }));
+                    showUserAlert('Error updating status: ' + (errorResult.error || errorResult.message || res.statusText), 'error');
                 }
-            } catch (e) { 
-                console.error('Error updating status:', e); 
-                showUserAlert('Network error while updating status: ' + e.message, 'error');
-            } finally { 
-                setButtonLoading(false, buttonElement, null); 
+            } catch (e) {
+                console.error('Error updating status:', e);
+                showUserAlert('Network error: ' + e.message, 'error');
+            } finally {
+                setButtonLoading(false, buttonElement, null);
             }
         }
+        
+        async function processCloseLost(entryId, buttonElement) {
+            setButtonLoading(true, buttonElement, null);
+            const entryIdx = allEntries.findIndex(e => e.id === entryId);
+            if (entryIdx === -1) { 
+                showUserAlert('Error: Entry not found.', 'error');
+                setButtonLoading(false, buttonElement, null);
+                return; 
+            }
+
+            const entryToUpdate = { ...allEntries[entryIdx] };
+            const newStatus = STATUS_MAP.CLOSED_LOST;
+            
+            const dataToUpdatePayload = { status: newStatus };
+            Object.keys(STEP_LEAD_TIMES).forEach(stepKey => {
+                dataToUpdatePayload[`plannedTimestamp_${stepKey}`] = null;
+                dataToUpdatePayload[`actualTimestamp_${stepKey}`] = entryToUpdate[`actualTimestamp_${stepKey}`] || null; 
+                dataToUpdatePayload[`timeDelay_${stepKey}`] = entryToUpdate[`timeDelay_${stepKey}`] || null;
+            });
+            dataToUpdatePayload.isFullPaymentReceived = null; 
+
+            try {
+                const updateUrl = `${SCRIPT_URL}/id/${entryId}`;
+                const res = await fetch(updateUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: dataToUpdatePayload })
+                });
+
+                if (res.ok) {
+                    showUserAlert(`Entry ${entryToUpdate.uid} marked as "${newStatus}"!`, 'success');
+                    Object.assign(allEntries[entryIdx], dataToUpdatePayload);
+                    allEntries[entryIdx].status = newStatus; 
+
+                    applySorting(); renderTable(allEntries);
+                    closeModal(entryDetailsModal); 
+                } else { 
+                    const errorResult = await res.json().catch(() => ({ message: 'Unknown error' }));
+                    showUserAlert('Error updating status to Closed-Lost: ' + (errorResult.error || errorResult.message || res.statusText), 'error');
+                }
+            } catch (e) { 
+                 console.error('Error marking as Closed-Lost:', e);
+                showUserAlert('Network error while updating status: ' + e.message, 'error');
+            }
+            finally { setButtonLoading(false, buttonElement, null); }
+        }
+
 
         // --- ENTRY DETAILS MODAL ---
         function populateDetailsModal(entry) {
@@ -586,6 +918,22 @@
 
             const controlsGroup = document.createElement('div');
             controlsGroup.className = 'modal-controls-group';
+
+            if (entry.status !== STATUS_MAP.CLOSED_LOST && entry.status !== STATUS_MAP.PAYMENT_COMPLETED) {
+                const closeLostButton = document.createElement('button');
+                closeLostButton.className = 'modal-control-button close-lost-btn';
+                closeLostButton.title = 'Mark as Closed-Lost';
+                closeLostButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hand-thumbs-down-fill" viewBox="0 0 16 16"><path d="M6.956 14.534c.258.282.656.466 1.044.466h.003c.388 0 .786-.184 1.044-.466l.059-.064.062-.065c.17-.178.292-.382.382-.595.072-.166.12-.34.138-.521A3.4 3.4 0 0 0 10.5 11V7a1 1 0 0 0-1-1H6.465a1.12 1.12 0 0 0-.898.46L4.21 7.882a.5.5 0 0 1-.854-.53L4.85 3.85a1.12 1.12 0 0 0-.908-.985l-.002-.001H3.503a1 1 0 0 0-1 1.003Z"/><path d="M13.5 0A1.5 1.5 0 0 0 12 1.5v6.956c0 .417-.163.81-.448 1.106L9.937 11.18H13.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 13.5 0"/></svg>`;
+                closeLostButton.onclick = () => {
+                    showUserAlert(`Are you sure you want to mark entry "${entry.billingName || entry.uid}" as Closed-Lost? This action cannot be undone.`, 
+                    'confirm', 
+                    () => { 
+                        processCloseLost(entry.id, closeLostButton);
+                    });
+                };
+                controlsGroup.appendChild(closeLostButton);
+            }
+
 
             const deleteIconButton = document.createElement('button');
             deleteIconButton.className = 'modal-control-button delete-btn'; 
@@ -660,6 +1008,11 @@
             if(entry.gstBill === 'GST Bill') dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('GST #', entry.gstNumber));
             dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('Commission Tenure', entry.commissionTenure ? `${entry.commissionTenure} year(s)`: 'N/A'));
             dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('Taxable Value', entry.taxableValue ? `₹${parseFloat(entry.taxableValue).toFixed(2)}` : 'N/A'));
+             if (entry.hasOwnProperty('isFullPaymentReceived')) { 
+                dealSection.querySelector('.crm-section-content').appendChild(
+                    createSectionItem('Full Payment on S7', entry.isFullPaymentReceived === true ? 'Yes' : (entry.isFullPaymentReceived === false ? 'No' : 'N/A'))
+                );
+            }
             row2.appendChild(dealSection);
 
             const assignmentSection = document.createElement('div'); 
@@ -679,8 +1032,20 @@
             timelineTitle.textContent = 'Process Timeline';
             timelineOuterSection.appendChild(timelineTitle);
 
+            const canTakeOverallAction = entry.status !== STATUS_MAP.CLOSED_LOST && entry.status !== STATUS_MAP.PAYMENT_COMPLETED;
+            let stopRenderingFurtherSteps = false;
+
             Object.keys(STEP_NAMES).forEach(stepKey => {
-                if (stepKey === 'entry') return; 
+                if (stepKey === 'entry' || stopRenderingFurtherSteps) return; 
+                
+                const isSkipped = entry[`actualTimestamp_${stepKey}`] === "SKIPPED";
+                const trueNextActionableStep = getTrueNextActionableStepKey(entry);
+
+                if (isSkipped && stepKey !== trueNextActionableStep) { 
+                    return;
+                }
+
+
                 const stepDiv = document.createElement('div'); stepDiv.className = 'timeline-step';
                 const stepTitle = document.createElement('strong'); stepTitle.textContent = STEP_NAMES[stepKey];
                 stepDiv.appendChild(stepTitle);
@@ -688,39 +1053,161 @@
                 
                 stepDetailsGrid.appendChild(createSectionItem('Planned', formatDateForDisplay(entry[`plannedTimestamp_${stepKey}`]), false)); 
                 stepDetailsGrid.appendChild(createSectionItem('Actual', formatDateForDisplay(entry[`actualTimestamp_${stepKey}`]), false)); 
-                stepDetailsGrid.appendChild(createSectionItem('Delay', entry[`timeDelay_${stepKey}`], true)); 
+                stepDetailsGrid.appendChild(createSectionItem('Delay', entry[`timeDelay_${stepKey}`] === "SKIPPED" ? "SKIPPED" : calculateTimeDelay(entry[`actualTimestamp_${stepKey}`], entry[`plannedTimestamp_${stepKey}`]) , true)); 
                 stepDiv.appendChild(stepDetailsGrid); 
 
-                let isNextActionableStep = false;
-                let actionConfig = null;
-                const currentStatus = entry.status;
+                if (canTakeOverallAction) {
+                    let isNextActionableStep = false;
+                    let actionConfig = null;
+                    const currentStatus = entry.status;
 
-                if (!entry[`actualTimestamp_${stepKey}`]) { 
-                    if (currentStatus === STATUS_MAP.STEP1_COMPLETE && stepKey === 'customerConfirmation') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.customerConfirmation; }
-                    else if (currentStatus === STATUS_MAP.STEP2_COMPLETE && stepKey === 'billPreparation') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.billPreparation; }
-                    else if (currentStatus === STATUS_MAP.STEP3_COMPLETE && stepKey === 'invoiceGeneration') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.invoiceGeneration; }
-                    else if (currentStatus === STATUS_MAP.STEP4_COMPLETE && stepKey === 'billReceivingFollowup') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.billReceivingFollowup; }
-                    else if (currentStatus === STATUS_MAP.STEP5_COMPLETE && stepKey === 'paymentFollowup') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentFollowup; }
-                    else if (currentStatus === STATUS_MAP.STEP6_COMPLETE && stepKey === 'paymentReceive') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentReceive; }
-                    else if (currentStatus === STATUS_MAP.STEP7_COMPLETE && stepKey === 'dueFollowup') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.dueFollowup; }
-                    else if (currentStatus === STATUS_MAP.STEP8_COMPLETE && stepKey === 'paymentArrangement') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentArrangement; }
-                    else if (currentStatus === STATUS_MAP.STEP9_COMPLETE && stepKey === 'paymentCompletion') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentCompletion; }
-                }
+                    if (!entry[`actualTimestamp_${stepKey}`] || entry[`actualTimestamp_${stepKey}`] === "SKIPPED") { 
+                        if (currentStatus === STATUS_MAP.STEP1_COMPLETE && stepKey === 'customerConfirmation') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.customerConfirmation; }
+                        else if (currentStatus === STATUS_MAP.STEP2_COMPLETE && stepKey === 'billPreparation') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.billPreparation; }
+                        else if (currentStatus === STATUS_MAP.STEP3_COMPLETE && stepKey === 'invoiceGeneration') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.invoiceGeneration; }
+                        else if (currentStatus === STATUS_MAP.STEP4_COMPLETE && stepKey === 'billReceivingFollowup') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.billReceivingFollowup; }
+                        else if (currentStatus === STATUS_MAP.STEP5_COMPLETE && stepKey === 'paymentFollowup') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentFollowup; }
+                        else if (currentStatus === STATUS_MAP.STEP6_COMPLETE && stepKey === 'paymentReceive') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentReceive; }
+                        else if (currentStatus === STATUS_MAP.STEP7_COMPLETE) {
+                            if (entry.isFullPaymentReceived === false && stepKey === 'dueFollowup') { 
+                                isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.dueFollowup;
+                            } else if (entry.isFullPaymentReceived === true && stepKey === 'paymentCompletion') {
+                                isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentCompletion;
+                            }
+                        }
+                        else if (currentStatus === STATUS_MAP.STEP8_COMPLETE && stepKey === 'paymentArrangement') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentArrangement; }
+                        else if (currentStatus === STATUS_MAP.STEP9_COMPLETE && stepKey === 'paymentCompletion') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentCompletion; }
+                    }
 
-                if (isNextActionableStep && actionConfig) {
-                    const actionButton = document.createElement('button');
-                    actionButton.textContent = actionConfig.buttonText || 'Take Action';
-                    actionButton.className = `btn ${actionConfig.buttonClass || 'btn-primary'} btn-take-action`;
-                    actionButton.onclick = async () => {
-                        await processStepCompletion(entry.id, actionButton, stepKey, actionConfig.nextStepKey, actionConfig.newStatus);
-                    };
-                    stepDiv.appendChild(actionButton); 
+                    if (isNextActionableStep && actionConfig) {
+                        const actionButton = document.createElement('button');
+                        actionButton.textContent = actionConfig.buttonText || 'Take Action';
+                        actionButton.className = `btn ${actionConfig.buttonClass || 'btn-primary'} btn-take-action`;
+                        
+                        actionButton.onclick = () => { 
+                            const stepDisplayName = STEP_NAMES[stepKey] || "this step";
+                            if (stepKey === 'paymentReceive') { 
+                                const s7Handler = (isComplete) => {
+                                    showUserAlert(`Confirm payment received as "${isComplete ? 'Complete' : 'Incomplete'}"?`, 'confirm', () => {
+                                        processPaymentReceiveChoice(entry.id, actionButton, isComplete);
+                                    });
+                                };
+                                showUserAlert(
+                                    'Is the payment received completely for this entry?', 
+                                    'choice', 
+                                    null, 
+                                    [
+                                        { text: 'Payment Complete', class: 'btn-success', handler: () => s7Handler(true) },
+                                        { text: 'Payment Incomplete', class: 'btn-warning', handler: () => s7Handler(false) }
+                                    ]
+                                );
+                            } else { 
+                                showUserAlert(`Are you sure you want to complete ${stepDisplayName} and proceed?`, 
+                                'confirm', 
+                                async () => { 
+                                    closeAlertModal(); 
+                                    await processStepCompletion(entry.id, actionButton, stepKey, actionConfig.nextStepKey, actionConfig.newStatus);
+                                });
+                            }
+                        };
+                        stepDiv.appendChild(actionButton); 
+                    }
                 }
                 timelineOuterSection.appendChild(stepDiv);
+                
+                if (stepKey === trueNextActionableStep && (!entry[`actualTimestamp_${stepKey}`] || entry[`actualTimestamp_${stepKey}`] === "SKIPPED")) {
+                    if (!(stepKey === 'paymentReceive' && entry.isFullPaymentReceived === true)) {
+                         stopRenderingFurtherSteps = true;
+                    }
+                }
             });
             detailsModalContent.appendChild(timelineOuterSection);
-            console.log("populateDetailsModal finished."); 
         }
+        
+        function getTrueNextActionableStepKey(entry) {
+            if (entry.status === STATUS_MAP.CLOSED_LOST || entry.status === STATUS_MAP.PAYMENT_COMPLETED) return null;
+
+            if (entry.status === STATUS_MAP.STEP1_COMPLETE) return 'customerConfirmation';
+            if (entry.status === STATUS_MAP.STEP2_COMPLETE) return 'billPreparation';
+            if (entry.status === STATUS_MAP.STEP3_COMPLETE) return 'invoiceGeneration';
+            if (entry.status === STATUS_MAP.STEP4_COMPLETE) return 'billReceivingFollowup';
+            if (entry.status === STATUS_MAP.STEP5_COMPLETE) return 'paymentFollowup';
+            if (entry.status === STATUS_MAP.STEP6_COMPLETE) return 'paymentReceive';
+            if (entry.status === STATUS_MAP.STEP7_COMPLETE) {
+                return entry.isFullPaymentReceived === true ? 'paymentCompletion' : 'dueFollowup';
+            }
+            if (entry.status === STATUS_MAP.STEP8_COMPLETE) return 'paymentArrangement';
+            if (entry.status === STATUS_MAP.STEP9_COMPLETE) return 'paymentCompletion';
+            return null; 
+        }
+        
+        async function processPaymentReceiveChoice(entryId, buttonElement, isFullPaymentReceived) {
+            setButtonLoading(true, buttonElement, null);
+            const entryIdx = allEntries.findIndex(e => e.id === entryId);
+            if (entryIdx === -1) { /* ... error handling ... */ setButtonLoading(false, buttonElement, null); return; }
+
+            const now = new Date();
+            const entryToUpdate = { ...allEntries[entryIdx] };
+            const currentStepKey = 'paymentReceive';
+
+            const dataToUpdatePayload = {
+                status: STATUS_MAP.STEP7_COMPLETE,
+                [`actualTimestamp_${currentStepKey}`]: formatDateForDisplay(now),
+                isFullPaymentReceived: isFullPaymentReceived 
+            };
+
+            if (entryToUpdate[`plannedTimestamp_${currentStepKey}`]) {
+                const plannedDate = new Date(entryToUpdate[`plannedTimestamp_${currentStepKey}`].replace(/-/g, " ").replace(" AM", "").replace(" PM", ""));
+                if (!isNaN(plannedDate.getTime())) {
+                    dataToUpdatePayload[`timeDelay_${currentStepKey}`] = calculateTimeDelay(now, plannedDate).replace(/<[^>]*>?/gm, '');
+                } else {
+                     dataToUpdatePayload[`timeDelay_${currentStepKey}`] = "N/A";
+                }
+            }
+
+            if (isFullPaymentReceived) {
+                dataToUpdatePayload[`plannedTimestamp_dueFollowup`] = "SKIPPED";
+                dataToUpdatePayload[`actualTimestamp_dueFollowup`] = "SKIPPED";
+                dataToUpdatePayload[`timeDelay_dueFollowup`] = "SKIPPED";
+                dataToUpdatePayload[`plannedTimestamp_paymentArrangement`] = "SKIPPED";
+                dataToUpdatePayload[`actualTimestamp_paymentArrangement`] = "SKIPPED";
+                dataToUpdatePayload[`timeDelay_paymentArrangement`] = "SKIPPED";
+                dataToUpdatePayload[`plannedTimestamp_paymentCompletion`] = formatDateForDisplay(addDays(now, STEP_LEAD_TIMES.paymentCompletion));
+            } else {
+                dataToUpdatePayload[`plannedTimestamp_dueFollowup`] = formatDateForDisplay(addDays(now, STEP_LEAD_TIMES.dueFollowup));
+                dataToUpdatePayload[`plannedTimestamp_paymentArrangement`] = null;
+                dataToUpdatePayload[`actualTimestamp_paymentArrangement`] = null;
+                dataToUpdatePayload[`timeDelay_paymentArrangement`] = null;
+                dataToUpdatePayload[`plannedTimestamp_paymentCompletion`] = null;
+                dataToUpdatePayload[`actualTimestamp_paymentCompletion`] = null;
+                dataToUpdatePayload[`timeDelay_paymentCompletion`] = null;
+            }
+
+            try {
+                const updateUrl = `${SCRIPT_URL}/id/${entryId}`;
+                const res = await fetch(updateUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: dataToUpdatePayload })
+                });
+                if (res.ok) {
+                    showUserAlert(`Payment Receive (S7) processed as ${isFullPaymentReceived ? 'Fully Paid' : 'Incomplete'}.`, 'success');
+                    Object.assign(allEntries[entryIdx], dataToUpdatePayload);
+                    applySorting(); renderTable(allEntries);
+                    if (entryDetailsModal.style.display === "block") {
+                        populateDetailsModal(allEntries[entryIdx]);
+                    }
+                } else { 
+                    const errorResult = await res.json().catch(() => ({ message: 'Unknown error' }));
+                    showUserAlert('Error updating S7: ' + (errorResult.error || errorResult.message || res.statusText), 'error');
+                 }
+            } catch (e) { 
+                console.error('Error processing S7 choice:', e);
+                showUserAlert('Network error processing S7: ' + e.message, 'error');
+             }
+            finally { setButtonLoading(false, buttonElement, null); }
+        }
+
 
         async function fetchEntries() {
             tableStatus.textContent = 'Loading entries from SheetDB...'; 
@@ -728,7 +1215,7 @@
             entriesTableBody.innerHTML = ''; 
             paginationControls.innerHTML = '';
 
-            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') { // Fallback to demo if URL not set
+            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') { 
                 console.warn("SCRIPT_URL is still the placeholder. Using local demo data for fetchEntries.");
                  if (allEntries.length === 0) { 
                     const now = new Date(); const step1Time = new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000); 
@@ -736,31 +1223,41 @@
                         { 
                             id: 'demo1', uid: 'UID01', entryTimestamp: formatDateForInput(step1Time), billingName: 'Alpha Services (Demo)', category: 'Residential', assignedBy: 'Sanat Majumdar', status: STATUS_MAP.STEP1_COMPLETE, 
                             requirement: "Buy, Rent", gstBill: "GST Bill", gstNumber:"GSTALPHA123", commissionTenure:"1", taxableValue: "50000", billingAddress: "123 Alpha St", emailId:"alpha@example.com", mobileNumber:"9998887770",
-                            actualTimestamp_entry: formatDateForInput(step1Time), 
-                            plannedTimestamp_customerConfirmation: formatDateForInput(addDays(step1Time, STEP_LEAD_TIMES.customerConfirmation)), actualTimestamp_customerConfirmation: null, timeDelay_customerConfirmation: null,
-                            systemTimestamp: step1Time.toISOString()
+                            actualTimestamp_entry: formatDateForDisplay(step1Time), 
+                            plannedTimestamp_customerConfirmation: formatDateForDisplay(addDays(step1Time, STEP_LEAD_TIMES.customerConfirmation)), 
+                            actualTimestamp_customerConfirmation: null, timeDelay_customerConfirmation: null,
+                            systemTimestamp: formatDateForDisplay(step1Time),
+                            isFullPaymentReceived: null 
                         }
                     ];
                 }
+                applySorting(); 
                 renderTable(allEntries); generateAndSetNextUid();
                 tableStatus.classList.toggle('hidden', allEntries.length > 0);
                 if (allEntries.length === 0) tableStatus.textContent = 'No entries (demo).'; return;
             }
             try {
-                const res = await fetch(SCRIPT_URL); // GET request to SheetDB
+                const res = await fetch(SCRIPT_URL); 
                 if (!res.ok) {
                     const errorText = await res.text();
                     throw new Error(`Failed to fetch from SheetDB: ${res.status} ${res.statusText} - ${errorText}`);
                 }
                 const data = await res.json();
                 if (Array.isArray(data)) {
-                    allEntries = data.map(e=>({...e})).sort((a,b) => {
-                        // Sort by systemTimestamp if available, otherwise by another field like uid or id
-                        const dateA = e.systemTimestamp ? new Date(e.systemTimestamp) : 0;
-                        const dateB = b.systemTimestamp ? new Date(b.systemTimestamp) : 0;
-                        return dateB - dateA;
+                    allEntries = data.map(e=>({...e, 
+                        isFullPaymentReceived: e.isFullPaymentReceived === 'true' ? true : (e.isFullPaymentReceived === 'false' ? false : null)
+                    })).sort((a,b) => {
+                        let dateA, dateB;
+                        try { dateA = new Date(a.systemTimestamp.replace(/-/g, " ").replace(" AM", "").replace(" PM", "")); } catch { dateA = 0; }
+                        try { dateB = new Date(b.systemTimestamp.replace(/-/g, " ").replace(" AM", "").replace(" PM", "")); } catch { dateB = 0; }
+                        if (isNaN(dateA.getTime())) dateA = 0;
+                        if (isNaN(dateB.getTime())) dateB = 0;
+                        return dateB - dateA; 
                     }); 
-                    currentPage = 1; renderTable(allEntries); generateAndSetNextUid();
+                    currentPage = 1; 
+                    applySorting(); 
+                    renderTable(allEntries); 
+                    generateAndSetNextUid();
                     tableStatus.classList.toggle('hidden', allEntries.length > 0);
                     if (allEntries.length === 0) tableStatus.textContent = 'No entries found in SheetDB.';
                 } else { 
@@ -776,8 +1273,10 @@
         function renderTable(entries) { 
             entriesTableBody.innerHTML = ''; paginationControls.innerHTML = ''; 
             const searchTerm = searchInput.value.toLowerCase();
-            const filtered = entries.filter(e => [e.uid, e.entryTimestamp, e.billingName, e.status, e.category, e.assignedBy].some(v => String(v).toLowerCase().includes(searchTerm)));
+            const filtered = entries.filter(e => [e.uid, e.actualTimestamp_entry, e.billingName, e.status, e.category, e.assignedBy].some(v => String(v).toLowerCase().includes(searchTerm)));
             
+            renderScorecards(allEntries);
+
             tableStatus.classList.toggle('hidden', filtered.length > 0);
              if (filtered.length === 0) {
                 if (entries.length > 0 && searchTerm) {
@@ -789,50 +1288,103 @@
                 }
             }
 
-
             const paginated = filtered.slice((currentPage-1)*ITEMS_PER_PAGE, (currentPage-1)*ITEMS_PER_PAGE + ITEMS_PER_PAGE);
-            const headers = [ 
-                {key:'uid',label:'UID'}, {key:'actualTimestamp_entry',label:'Timestamp (S1)',format:formatDateForDisplay}, 
-                {key:'billingName',label:'Billing Name'}, {key:'status',label:'Status'}, 
-                {key:'category',label:'Category'}, {key:'assignedBy',label:'Assigned By'},
-                {key:'nextPlannedActionOn', label:'Next Planned On', format: (val, entry) => getNextPlannedActionTimestamp(entry)}
-            ];
+            
             paginated.forEach((entry, idx) => {
                 const r = entriesTableBody.insertRow(); r.className = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'; 
-                headers.forEach(h => { 
+                tableHeadersConfig.forEach(hConfig => {
+                    if (hConfig.key === 'actions') return; 
                     const c = r.insertCell(); 
-                    const v = h.key === 'nextPlannedActionOn' ? h.format(null, entry) : entry[h.key];
-                    c.textContent = (h.key !== 'nextPlannedActionOn' && h.format) ? h.format(v) : (v||'N/A'); 
-                    c.setAttribute('data-label',h.label); c.className='px-3 py-4 whitespace-nowrap text-sm text-gray-700'; 
+                    let cellValue;
+                    let cellHtml = '';
+                    let isOverdue = false;
+
+                    if (hConfig.customRender) {
+                        const renderResult = hConfig.customRender(entry);
+                        cellValue = renderResult.text || 'N/A';
+                        isOverdue = renderResult.isOverdue || false;
+                    } else {
+                        cellValue = entry[hConfig.key];
+                        cellValue = (hConfig.isDate && cellValue) ? formatDateForDisplay(cellValue) : (cellValue || 'N/A');
+                    }
+                    
+                    if (hConfig.key === 'status') {
+                        let statusClass = 'status-default';
+                        if (entry.status === STATUS_MAP.STEP1_COMPLETE) statusClass = 'status-entry-added-awaiting-customer-confirmation';
+                        else if (entry.status === STATUS_MAP.STEP2_COMPLETE) statusClass = 'status-customer-confirmed-awaiting-bill-prep';
+                        else if (entry.status === STATUS_MAP.STEP3_COMPLETE) statusClass = 'status-bill-prepared-awaiting-invoice-generation';
+                        else if (entry.status === STATUS_MAP.STEP4_COMPLETE) statusClass = 'status-invoice-generated-awaiting-bill-receiving-followup';
+                        else if (entry.status === STATUS_MAP.STEP5_COMPLETE) statusClass = 'status-bill-followed-up-awaiting-payment-followup';
+                        else if (entry.status === STATUS_MAP.STEP6_COMPLETE) statusClass = 'status-payment-followed-up-awaiting-payment-receive';
+                        else if (entry.status === STATUS_MAP.STEP7_COMPLETE) statusClass = 'status-payment-received-awaiting-next-action';
+                        else if (entry.status === STATUS_MAP.STEP8_COMPLETE) statusClass = 'status-due-followed-up-awaiting-payment-arrangement';
+                        else if (entry.status === STATUS_MAP.STEP9_COMPLETE) statusClass = 'status-payment-arrangement-made-awaiting-payment-completion';
+                        else if (entry.status === STATUS_MAP.STEP10_COMPLETE) statusClass = 'status-payment-completed';
+                        else if (entry.status === STATUS_MAP.CLOSED_LOST) statusClass = 'status-closed-lost';
+                        cellHtml = `<span class="status-badge ${statusClass}">${cellValue}</span>`;
+                    } else if (isOverdue) {
+                        cellHtml = `<span class="overdue-task">${cellValue}</span>`;
+                    } else {
+                        cellHtml = cellValue;
+                    }
+                    c.innerHTML = cellHtml; 
+                    c.setAttribute('data-label',hConfig.label); 
+                    c.className='px-3 py-4 whitespace-nowrap text-sm text-gray-700'; 
                 });
                 const actCell = r.insertCell(); actCell.setAttribute('data-label','Actions'); actCell.className='px-3 py-4 whitespace-nowrap text-sm text-gray-700 text-right md:text-left flex items-center space-x-1';
-                
                 const viewButton = document.createElement('button');
                 viewButton.className = 'btn btn-info btn-sm text-xs p-1 btn-icon-only';
                 viewButton.title = 'View Details';
                 viewButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/></svg>`;
-                viewButton.onclick = () => openEntryDetailsModal(entry.id); // Ensure entry.id is the correct unique key from SheetDB
+                viewButton.onclick = () => openEntryDetailsModal(entry.id); 
                 actCell.appendChild(viewButton);
             });
             renderPaginationControls(filtered.length);
         }
-        function getNextPlannedActionTimestamp(entry) {
-            if (entry.status === STATUS_MAP.STEP1_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_customerConfirmation);
-            if (entry.status === STATUS_MAP.STEP2_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_billPreparation);
-            if (entry.status === STATUS_MAP.STEP3_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_invoiceGeneration);
-            if (entry.status === STATUS_MAP.STEP4_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_billReceivingFollowup);
-            if (entry.status === STATUS_MAP.STEP5_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_paymentFollowup);
-            if (entry.status === STATUS_MAP.STEP6_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_paymentReceive);
-            if (entry.status === STATUS_MAP.STEP7_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_dueFollowup);
-            if (entry.status === STATUS_MAP.STEP8_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_paymentArrangement);
-            if (entry.status === STATUS_MAP.STEP9_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_paymentCompletion);
-            return 'N/A'; 
+        
+        function getNextPlannedActionTimestamp(entry) { 
+            let plannedTimestampStr = 'N/A';
+            let isOverdue = false;
+            const now = new Date();
+
+            const checkAndSet = (statusToCheck, plannedKey, actualKey) => {
+                if (entry.status === statusToCheck && entry[plannedKey] && entry[plannedKey] !== "SKIPPED" && (!entry[actualKey] || entry[actualKey] === "SKIPPED")) {
+                    plannedTimestampStr = formatDateForDisplay(entry[plannedKey]);
+                    const plannedDate = new Date(entry[plannedKey].replace(/-/g, " ").replace(" AM", "").replace(" PM", "")); 
+                    if (!isNaN(plannedDate.getTime()) && plannedDate < now) {
+                        isOverdue = true;
+                    }
+                    return true; 
+                }
+                return false;
+            };
+            
+            if (entry.status === STATUS_MAP.STEP7_COMPLETE && entry.isFullPaymentReceived === true) {
+                if (entry.plannedTimestamp_paymentCompletion && entry.plannedTimestamp_paymentCompletion !== "SKIPPED" && (!entry.actualTimestamp_paymentCompletion || entry.actualTimestamp_paymentCompletion === "SKIPPED")) {
+                     plannedTimestampStr = formatDateForDisplay(entry.plannedTimestamp_paymentCompletion);
+                     const plannedDate = new Date(entry.plannedTimestamp_paymentCompletion.replace(/-/g, " ").replace(" AM", "").replace(" PM", ""));
+                     if(!isNaN(plannedDate.getTime()) && plannedDate < now) isOverdue = true;
+                }
+            } else {
+                 if (checkAndSet(STATUS_MAP.STEP1_COMPLETE, 'plannedTimestamp_customerConfirmation', 'actualTimestamp_customerConfirmation')) {}
+                else if (checkAndSet(STATUS_MAP.STEP2_COMPLETE, 'plannedTimestamp_billPreparation', 'actualTimestamp_billPreparation')) {}
+                else if (checkAndSet(STATUS_MAP.STEP3_COMPLETE, 'plannedTimestamp_invoiceGeneration', 'actualTimestamp_invoiceGeneration')) {}
+                else if (checkAndSet(STATUS_MAP.STEP4_COMPLETE, 'plannedTimestamp_billReceivingFollowup', 'actualTimestamp_billReceivingFollowup')) {}
+                else if (checkAndSet(STATUS_MAP.STEP5_COMPLETE, 'plannedTimestamp_paymentFollowup', 'actualTimestamp_paymentFollowup')) {}
+                else if (checkAndSet(STATUS_MAP.STEP6_COMPLETE, 'plannedTimestamp_paymentReceive', 'actualTimestamp_paymentReceive')) {}
+                else if (checkAndSet(STATUS_MAP.STEP7_COMPLETE, 'plannedTimestamp_dueFollowup', 'actualTimestamp_dueFollowup')) {} 
+                else if (checkAndSet(STATUS_MAP.STEP8_COMPLETE, 'plannedTimestamp_paymentArrangement', 'actualTimestamp_paymentArrangement')) {}
+                else if (checkAndSet(STATUS_MAP.STEP9_COMPLETE, 'plannedTimestamp_paymentCompletion', 'actualTimestamp_paymentCompletion')) {}
+            }
+            
+            return { text: plannedTimestampStr, isOverdue: isOverdue };
         }
+
 
         function renderPaginationControls(total) {
             paginationControls.innerHTML=''; const totalPages=Math.ceil(total/ITEMS_PER_PAGE); if(totalPages<=1)return;
-            const p=Object.assign(document.createElement('button'),{textContent:'Previous',className:'btn btn-secondary text-sm',disabled:currentPage===1,onclick:()=>{if(currentPage>1){currentPage--;renderTable(allEntries);}}});
-            const n=Object.assign(document.createElement('button'),{textContent:'Next',className:'btn btn-secondary text-sm',disabled:currentPage===totalPages,onclick:()=>{if(currentPage<totalPages){currentPage++;renderTable(allEntries);}}});
+            const p=Object.assign(document.createElement('button'),{textContent:'Previous',className:'btn btn-secondary text-sm',disabled:currentPage===1,onclick:()=>{if(currentPage>1){currentPage--; applySorting(); renderTable(allEntries);}}});
+            const n=Object.assign(document.createElement('button'),{textContent:'Next',className:'btn btn-secondary text-sm',disabled:currentPage===totalPages,onclick:()=>{if(currentPage<totalPages){currentPage++; applySorting(); renderTable(allEntries);}}});
             const i=Object.assign(document.createElement('span'),{textContent:`Page ${currentPage} of ${totalPages}`,className:'px-4 py-2 text-sm text-gray-700'});
             paginationControls.append(p,i,n);
         }
@@ -841,29 +1393,37 @@
                 showUserAlert('Error: Entry ID missing for deletion.','error');
                 return;
             }
-            showUserAlert(`Are you sure you want to delete entry: "${identifier}" (ID: ${id})? This action cannot be undone.`, 'confirm');
-            modalConfirmButton.onclick = () => {
+            showUserAlert(`Are you sure you want to delete entry: "${identifier}" (ID: ${id})? This action cannot be undone.`, 
+            'confirm',
+            () => { 
                 deleteEntry(id);
-                closeAlertModal(); 
-            };
+                closeAlertModal();
+            });
         }
         async function deleteEntry(id) {
              if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
                 console.warn("SCRIPT_URL is placeholder. Local demo mode for deleteEntry.");
-                // ... (demo deletion logic remains same)
+                const entryIndex = allEntries.findIndex(e => e.id === id.toString()); 
+                if (entryIndex > -1) {
+                    const deletedEntryIdentifier = allEntries[entryIndex].billingName || allEntries[entryIndex].uid;
+                    allEntries.splice(entryIndex, 1);
+                    applySorting(); renderTable(allEntries);
+                    generateAndSetNextUid(); 
+                    showUserAlert(`Entry "${deletedEntryIdentifier}" deleted locally (demo).`, 'success');
+                } else {
+                    showUserAlert('Error: Entry not found for local deletion (demo).', 'error');
+                }
                 return;
             }
             tableStatus.textContent='Deleting entry from SheetDB...';tableStatus.classList.remove('hidden');
             try {
-                // SheetDB uses DELETE to SCRIPT_URL/column_to_match/value_to_match
-                // Assuming 'id' is the column to match and id is its value
                 const deleteUrl = `${SCRIPT_URL}/id/${id}`;
                 const res = await fetch(deleteUrl, { method:'DELETE' });
 
                 if(res.ok){
-                    const result = await res.json(); // SheetDB might return { "deleted": 1 } or similar
+                    const result = await res.json(); 
                     showUserAlert('Entry deleted successfully from SheetDB!','success');
-                    fetchEntries(); // Refresh data from sheet
+                    fetchEntries(); 
                 } else{
                     const errorResult = await res.json().catch(() => ({ message: 'Unknown error, unable to parse response.' }));
                     showUserAlert('Error deleting entry from SheetDB: '+(errorResult.error || errorResult.message || res.statusText),'error');
@@ -875,6 +1435,8 @@
                 tableStatus.classList.add('hidden');
             } 
         }
+
+        
     </script>
 </body>
 </html>
