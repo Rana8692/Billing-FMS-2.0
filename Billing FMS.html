@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing FMS - Sales & Accounts Stages</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; 
+        }
+        .modal {
+            display: none; position: fixed; z-index: 1000; 
+            left: 0; top: 0; width: 100%; height: 100%; 
+            overflow: auto; background-color: rgba(0,0,0,0.5); 
+        }
+        .modal-content-wrapper {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100%; padding: 1rem; 
+        }
+        .modal-content {
+            background-color: #ffffff; margin: auto; padding: 25px; 
+            border: 1px solid #d1d5db; width: 90%; 
+            border-radius: 0.5rem; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            position: relative; 
+        }
+        #addEntrySectionModal .modal-content, 
+        #entryDetailsModal .modal-content { 
+            max-width: 850px; 
+            max-height: 90vh; overflow-y: auto; 
+        }
+        #doerInfoModal .modal-content { max-width: 700px; max-height: 85vh; overflow-y: auto; }
+        #messageAlertModal .modal-content { max-width: 450px; }
+
+        .close-button { 
+            color: #6b7280; position: absolute; top: 10px; right: 15px;
+            font-size: 30px; font-weight: bold; transition: color 0.2s;
+            line-height: 1; 
+        }
+        .close-button:hover, .close-button:focus { color: #1f2937; text-decoration: none; cursor: pointer; }
+
+        .modal-controls-group { 
+            position: absolute;
+            top: 12px; 
+            right: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px; 
+            z-index: 10; 
+        }
+        .modal-control-button {
+            background: none;
+            border: none;
+            padding: 4px; 
+            cursor: pointer;
+            line-height: 1;
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.25rem; 
+            transition: background-color 0.2s;
+        }
+        .modal-control-button svg {
+            width: 16px; 
+            height: 16px;
+            display: block; 
+        }
+        .modal-control-button.delete-btn svg { fill: #9ca3af; }
+        .modal-control-button.delete-btn:hover svg { fill: #dc2626; }
+        .modal-control-button.close-btn svg { fill: #9ca3af; }
+        .modal-control-button.close-btn:hover svg { fill: #374151; }
+        .modal-control-button:hover { background-color: #e5e7eb; }
+
+        .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .table-container::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #555; }
+        .btn {
+            padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 500; 
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease;
+            cursor: pointer; text-align: center; display: inline-flex; 
+            align-items: center; justify-content: center;
+        }
+        .btn svg { margin-right: 0.5rem; margin-left: -0.25rem; }
+        .btn-icon-only svg { margin-right: 0; margin-left: 0; } 
+        .btn:active { transform: translateY(1px); }
+        .btn-primary { background-color: #4f46e5; color: white; }
+        .btn-primary:hover { background-color: #4338ca; box-shadow: 0 4px 14px 0 rgba(79,70,229,0.39); }
+        .btn-secondary { background-color: #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background-color: #d1d5db; }
+        .btn-success { background-color: #10b981; color: white; } 
+        .btn-success:hover { background-color: #059669; }
+        .btn-warning { background-color: #f59e0b; color: white; } 
+        .btn-warning:hover { background-color: #d97706; }
+        .btn-info { background-color: #3b82f6; color: white; } 
+        .btn-info:hover { background-color: #2563eb; }
+        .btn-danger { background-color: #dc2626; color: white; }
+        .btn-danger:hover { background-color: #b91c1c; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; }
+        @media (min-width: 768px) { 
+            .form-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+            .form-grid .col-span-2 { grid-column: span 2 / span 2; }
+        }
+        .checkbox-group label { margin-right: 1rem; display: inline-flex; align-items: center; }
+        .checkbox-group input[type="checkbox"] { margin-right: 0.25rem; }
+
+        .delay-ontime { color: #10b981; font-weight: 500; }
+        .delay-late { color: #dc2626; font-weight: 500; }
+        .delay-early { color: #3b82f6; font-weight: 500; }
+
+        #entryDetailsModal .crm-card { background: #fff; }
+        #entryDetailsModal .crm-card h2 { margin-bottom: 16px; font-size: 1.25rem; color: #2c3e50; font-weight: 600; }
+        #entryDetailsModal .crm-section-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+        #entryDetailsModal .crm-section { flex: 1 1 300px; border-radius: 8px; border: 1px solid #e0e0e0; background-color: var(--section-bg, rgba(200,200,200,0.1)); font-size: 13px; min-width: 280px; }
+        #entryDetailsModal .crm-section-header { padding: 8px 12px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; color: white; background-color: var(--section-color, #777); border-top-left-radius: 7px; border-top-right-radius: 7px;}
+        #entryDetailsModal .crm-section-header svg { width: 16px; height: 16px; fill: white;}
+        #entryDetailsModal .crm-section-content { padding: 10px 12px; border-bottom-left-radius: 7px; border-bottom-right-radius: 7px;}
+        #entryDetailsModal .crm-description-item { margin-bottom: 8px; }
+        #entryDetailsModal .crm-description-item:last-child { margin-bottom: 0; }
+        #entryDetailsModal .crm-label { font-weight: 600; color: #555; font-size: 0.8rem; margin-bottom: 2px;}
+        #entryDetailsModal .crm-value { font-size: 0.9rem; color: #222; word-break: break-word;}
+        #entryDetailsModal .crm-status-banner { background-color: #fff3cd; color: #856404; padding: 10px 12px; border-radius: 8px; font-weight: 700; text-align: center; margin-top: 20px; font-size: 14px;}
+
+        .details-section { background-color: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; margin-bottom: 1.25rem; border: 1px solid #e5e7eb;}
+        .details-section h3 { font-size: 1.125rem; font-weight: 600; color: #4f46e5; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #6366f1; }
+        .timeline-step { padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; margin-bottom: 0.75rem; background-color: #fff;}
+        .timeline-step strong { color: #4338ca; font-size: 1rem; display: block; margin-bottom: 0.25rem;}
+        .timeline-details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;}
+        .timeline-details-grid .details-item { padding: 0.1rem 0; margin-bottom: 0.1rem;}
+        .timeline-details-grid .details-label { font-size: 0.8rem; }
+        .timeline-details-grid .details-value { font-size: 0.85rem; }
+        .timeline-step .btn-take-action { margin-top: 0.75rem; padding: 0.375rem 0.75rem; font-size: 0.875rem; }
+
+        @media screen and (max-width: 768px) {
+            .responsive-table thead { display: none; }
+            .responsive-table tr { display: block; margin-bottom: 0.625em; border-radius: 0.375rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06); border: 1px solid #e5e7eb;}
+            .responsive-table td { display: block; text-align: right; font-size: 0.875rem; border-bottom: 1px solid #e5e7eb; padding-left: 50% !important; position: relative;}
+            .responsive-table td::before { content: attr(data-label); position: absolute; left: 0.75rem; width: 45%; padding-right: 0.75rem; white-space: nowrap; text-align: left; font-weight: 600; color: #4b5563; }
+            .responsive-table td:last-child { border-bottom: 0; }
+            .responsive-table.doer-info-table td { padding-left: 40% !important; }
+            .responsive-table.doer-info-table td::before { width: 35%; }
+            .main-action-buttons button { width: 100%; margin-bottom: 0.5rem;} 
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="container mx-auto max-w-7xl bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-700">Billing FMS - Sales & Accounts</h1>
+        </header>
+
+        <div class="mb-6 flex flex-wrap justify-end gap-2 main-action-buttons"> 
+            <button id="openDoerInfoModalButton" class="btn btn-secondary text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1z"/></svg>
+                Responsibilities
+            </button>
+            <button id="openEntryFormModalButton" class="btn btn-primary text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z"/></svg>
+                Add Entry (S1)
+            </button>
+        </div>
+
+        <div id="addEntrySectionModal" class="modal"><div class="modal-content-wrapper">
+            <section class="modal-content bg-gray-50"><span id="closeEntryFormModalButton" class="close-button">&times;</span>
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Add New Billing Entry (Stage 1)</h2>
+                <form id="billingEntryForm" class="space-y-4">
+                    <div class="form-grid">
+                        <div><label for="entryTimestamp" class="block text-sm font-medium text-gray-700 mb-1">Timestamp (Actual for Step 1)</label><input type="datetime-local" id="entryTimestamp" name="entryTimestamp" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                        <div><label for="uid" class="block text-sm font-medium text-gray-700 mb-1">Unique ID (UID)</label><input type="text" id="uid" name="uid" readonly class="w-full p-3 border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:outline-none"></div>
+                        <div class="col-span-2"><label for="billingName" class="block text-sm font-medium text-gray-700 mb-1">Billing Name</label><input type="text" id="billingName" name="billingName" placeholder="Enter client or company name" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                        <div class="col-span-2"><label for="billingAddress" class="block text-sm font-medium text-gray-700 mb-1">Billing Address</label><textarea id="billingAddress" name="billingAddress" rows="3" placeholder="Enter full billing address" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea></div>
+                        <div><label for="emailId" class="block text-sm font-medium text-gray-700 mb-1">Email ID</label><input type="email" id="emailId" name="emailId" placeholder="client@example.com" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                        <div><label for="mobileNumber" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label><input type="tel" id="mobileNumber" name="mobileNumber" placeholder="+91 XXXXXXXXXX" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                        <div><label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label><select id="category" name="category" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"><option value="">Select Category</option> <option value="Commercial">Commercial</option> <option value="Land/Plot">Land/Plot</option> <option value="Residential">Residential</option> <option value="ROI Property">ROI Property</option> <option value="Warehouse">Warehouse</option></select></div>
+                        <div class="col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Requirement</label><div id="requirement" class="checkbox-group mt-1 p-3 border border-gray-300 rounded-md bg-white"><label><input type="checkbox" name="requirement_buy" value="Buy"> Buy</label><label><input type="checkbox" name="requirement_lease" value="Lease"> Lease</label><label><input type="checkbox" name="requirement_rent" value="Rent"> Rent</label></div><p id="requirementError" class="text-xs text-red-500 mt-1 hidden">Please select at least one requirement.</p></div>
+                        <div><label for="gstBill" class="block text-sm font-medium text-gray-700 mb-1">GST or Non-GST Bill</label><select id="gstBill" name="gstBill" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"><option value="">Select Bill Type</option> <option value="GST Bill">GST Bill</option> <option value="Non-GST Bill">Non-GST Bill</option></select></div>
+                        <div><label for="gstNumber" class="block text-sm font-medium text-gray-700 mb-1">GST # (If applicable)</label><input type="text" id="gstNumber" name="gstNumber" placeholder="e.g., 22AAAAA0000A1Z5" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                        <div><label for="commissionTenure" class="block text-sm font-medium text-gray-700 mb-1">Commission Tenure (Years)</label><input type="number" id="commissionTenure" name="commissionTenure" placeholder="e.g., 1" min="0" step="1" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                        <div><label for="taxableValue" class="block text-sm font-medium text-gray-700 mb-1">Taxable Value (₹)</label><input type="number" id="taxableValue" name="taxableValue" placeholder="0.00" step="0.01" min="0" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                        <div class="col-span-2"><label for="assignedBy" class="block text-sm font-medium text-gray-700 mb-1">Assigned By</label><select id="assignedBy" name="assignedBy" required class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"><option value="">Select Assigner</option> <option value="Basant Agarwal">Basant Agarwal</option> <option value="Dipesh Chandra Pradhan">Dipesh Chandra Pradhan</option> <option value="Parshuram Jha">Parshuram Jha</option> <option value="Rajesh Kumar Thakur">Rajesh Kumar Thakur</option> <option value="Sanat Majumdar">Sanat Majumdar</option> <option value="Sayantun Paul">Sayantun Paul</option> <option value="Sumit Sha">Sumit Sha</option></select></div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4"><button type="button" id="clearFormButton" class="btn btn-secondary">Clear Form</button><button type="submit" id="submitButton" class="btn btn-primary">Add Entry <span id="loadingSpinner" class="hidden ml-2 inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span></button></div>
+                </form>
+            </section>
+        </div></div>
+
+        <div id="doerInfoModal" class="modal"><div class="modal-content-wrapper">
+            <section class="modal-content bg-white"><span id="closeDoerInfoModalButton" class="close-button">&times;</span>
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Billing Process Responsibilities</h2>
+                <div class="table-container overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 responsive-table doer-info-table">
+                        <thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task / Stage (What)</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doer Name</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email ID</th></tr></thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr><td data-label="Task / Stage">Detail Provide (S1)</td><td data-label="Doer Name">Sales Coordinator</td><td><a href="mailto:sc@buildwealthvealtors.com" class="text-indigo-600 hover:text-indigo-800">sc@buildwealthvealtors.com</a></td></tr>
+                            <tr class="bg-gray-50"><td data-label="Task / Stage">Confirmation from Customer (S2)</td><td data-label="Doer Name">Accounts</td><td><a href="mailto:acct.bulidwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.bulidwealthrealtors@gmail.com</a></td></tr>
+                            <tr><td data-label="Task / Stage">Bill Preparation (S3)</td><td data-label="Doer Name">Accounts</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
+                            <tr class="bg-gray-50"><td data-label="Task / Stage">Invoice Generation (S4)</td><td data-label="Doer Name">Accounts</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
+                            <tr><td data-label="Task / Stage">Bill Receiving Followup (S5)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
+                            <tr class="bg-gray-50"><td data-label="Task / Stage">Payment Followup (S6)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
+                            <tr><td data-label="Task / Stage">Payment Receive (S7)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
+                            <tr class="bg-gray-50"><td data-label="Task / Stage">Due Followup (S8)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
+                            <tr><td data-label="Task / Stage">Payment Arrangement (S9)</td><td data-label="Doer Name">Assigned Sale Person</td><td>N/A</td></tr>
+                            <tr class="bg-gray-50"><td data-label="Task / Stage">Payment Completion (S10)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div></div>
+        
+        <div id="entryDetailsModal" class="modal"><div class="modal-content-wrapper">
+            <section class="modal-content bg-white">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-1 mt-8" id="detailsModalTitle">Entry Details</h2> 
+                <p class="text-sm text-gray-500 mb-6" id="detailsModalSubtitle"></p>
+                <div id="detailsModalContent">
+                    </div>
+            </section>
+        </div></div>
+
+
+        <section id="entriesListSection" class="mb-10">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6">All Recorded Entries</h2>
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-2 sm:space-y-0">
+                <input type="text" id="searchInput" placeholder="Search entries..." class="p-2 border border-gray-300 rounded-md shadow-sm w-full sm:w-auto">
+                <div class="flex space-x-2">
+                    <button id="refreshButton" class="btn btn-secondary text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
+                        Refresh Data
+                    </button>
+                </div>
+            </div>
+            <div id="tableStatus" class="text-center p-4 text-gray-500">Loading entries...</div>
+            <div class="table-container overflow-x-auto bg-white rounded-lg shadow">
+                <table class="min-w-full divide-y divide-gray-200 responsive-table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-3 text-left text-xs font-medium">UID</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium">Timestamp (S1)</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium">Billing Name</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium">Status</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium">Category</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium">Assigned By</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium">Next Planned Action</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="entriesTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+             <div id="paginationControls" class="mt-4 flex justify-center items-center space-x-2"></div>
+        </section>
+    </div>
+
+    <div id="messageAlertModal" class="modal"><div class="modal-content-wrapper">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeAlertModal()">&times;</span> 
+            <p id="modalMessage" class="text-gray-700 text-center"></p>
+            <div class="mt-6 text-center default-modal-buttons"><button onclick="closeAlertModal()" class="btn btn-primary">OK</button></div>
+            <div class="mt-6 flex justify-center space-x-3 confirm-buttons" style="display:none;"><button id="modalCancelButton" class="btn btn-secondary">Cancel</button><button id="modalConfirmButton" class="btn btn-danger">Confirm Delete</button></div>
+        </div>
+    </div></div>
+
+    <script>
+        // --- CONFIGURATION & GLOBAL VARS ---
+        const SCRIPT_URL = 'https://sheetdb.io/api/v1/nydthm8eqg4w4'; // Replaced with SheetDB URL
+        const ITEMS_PER_PAGE = 10;
+        let currentPage = 1;
+        let allEntries = [];
+        let nextUidNumber = 1; // This will be primarily for display if SheetDB handles actual unique IDs
+
+        const STEP_LEAD_TIMES = { 
+            customerConfirmation: 2, billPreparation: 1, invoiceGeneration: 1, billReceivingFollowup: 2,
+            paymentFollowup: 1, paymentReceive: 1, dueFollowup: 2, paymentArrangement: 2, paymentCompletion: 1
+        };
+
+        const STATUS_MAP = {
+            STEP1_COMPLETE: "Pending Customer Confirmation", STEP2_COMPLETE: "Customer Confirmed - Awaiting Bill Prep",
+            STEP3_COMPLETE: "Bill Prepared", STEP4_COMPLETE: "Invoice Generated",
+            STEP5_COMPLETE: "Bill Receiving Followed Up", STEP6_COMPLETE: "Payment Followed Up",
+            STEP7_COMPLETE: "Payment Received", STEP8_COMPLETE: "Due Followed Up",
+            STEP9_COMPLETE: "Payment Arrangement Made", STEP10_COMPLETE: "Payment Completed",
+            CLOSED_WON: "Closed - Won", CLOSED_LOST: "Closed - Lost" 
+        };
+        
+        const STEP_NAMES = {
+            entry: "Entry Creation (S1)", customerConfirmation: "Customer Confirmation (S2)", billPreparation: "Bill Preparation (S3)",
+            invoiceGeneration: "Invoice Generation (S4)", billReceivingFollowup: "Bill Receiving Followup (S5)",
+            paymentFollowup: "Payment Followup (S6)", paymentReceive: "Payment Receive (S7)", dueFollowup: "Due Followup (S8)",
+            paymentArrangement: "Payment Arrangement (S9)", paymentCompletion: "Payment Completion (S10)"
+        };
+
+        const STEP_ACTION_CONFIG = {
+            customerConfirmation: { nextStepKey: 'billPreparation', newStatus: STATUS_MAP.STEP2_COMPLETE, buttonClass: 'btn-success', buttonText: 'Confirm (S2)' },
+            billPreparation:    { nextStepKey: 'invoiceGeneration', newStatus: STATUS_MAP.STEP3_COMPLETE, buttonClass: 'btn-warning', buttonText: 'Prepare Bill (S3)' },
+            invoiceGeneration:  { nextStepKey: 'billReceivingFollowup', newStatus: STATUS_MAP.STEP4_COMPLETE, buttonClass: 'btn-info', buttonText: 'Generate Invoice (S4)' },
+            billReceivingFollowup: { nextStepKey: 'paymentFollowup', newStatus: STATUS_MAP.STEP5_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Bill Followup Done (S5)' },
+            paymentFollowup:    { nextStepKey: 'paymentReceive', newStatus: STATUS_MAP.STEP6_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Payment Followup Done (S6)' },
+            paymentReceive:     { nextStepKey: 'dueFollowup', newStatus: STATUS_MAP.STEP7_COMPLETE, buttonClass: 'btn-success', buttonText: 'Payment Received (S7)' },
+            dueFollowup:        { nextStepKey: 'paymentArrangement', newStatus: STATUS_MAP.STEP8_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Due Followup Done (S8)' },
+            paymentArrangement: { nextStepKey: 'paymentCompletion', newStatus: STATUS_MAP.STEP9_COMPLETE, buttonClass: 'btn-warning', buttonText: 'Arrangement Made (S9)' },
+            paymentCompletion:  { nextStepKey: null, newStatus: STATUS_MAP.STEP10_COMPLETE, buttonClass: 'btn-success', buttonText: 'Complete Payment (S10)' }
+        };
+
+        // --- DOM ELEMENTS ---
+        const entryForm = document.getElementById('billingEntryForm');
+        const addEntrySectionModal = document.getElementById('addEntrySectionModal');
+        const openEntryFormModalButton = document.getElementById('openEntryFormModalButton');
+        const closeEntryFormModalButton = document.getElementById('closeEntryFormModalButton');
+        const submitButton = document.getElementById('submitButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const uidField = document.getElementById('uid');
+        const entryTimestampField = document.getElementById('entryTimestamp');
+        const requirementError = document.getElementById('requirementError');
+        const gstBillSelect = document.getElementById('gstBill');
+        const gstNumberInput = document.getElementById('gstNumber');
+        const clearFormButton = document.getElementById('clearFormButton');
+
+        const doerInfoModal = document.getElementById('doerInfoModal');
+        const openDoerInfoModalButton = document.getElementById('openDoerInfoModalButton');
+        const closeDoerInfoModalButton = document.getElementById('closeDoerInfoModalButton');
+
+        const entryDetailsModal = document.getElementById('entryDetailsModal'); 
+        const detailsModalTitle = document.getElementById('detailsModalTitle');
+        const detailsModalSubtitle = document.getElementById('detailsModalSubtitle'); 
+        const detailsModalContent = document.getElementById('detailsModalContent');
+
+        const messageAlertModal = document.getElementById('messageAlertModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const defaultModalButtons = messageAlertModal.querySelector('.default-modal-buttons');
+        const confirmModalButtons = messageAlertModal.querySelector('.confirm-buttons');
+        const modalConfirmButton = document.getElementById('modalConfirmButton');
+        const modalCancelButton = document.getElementById('modalCancelButton');
+
+        const entriesTableBody = document.getElementById('entriesTableBody');
+        const tableStatus = document.getElementById('tableStatus');
+        const refreshButton = document.getElementById('refreshButton');
+        const searchInput = document.getElementById('searchInput');
+        const paginationControls = document.getElementById('paginationControls');
+
+        // --- MODAL CONTROL FUNCTIONS ---
+        function openModal(modalElement) { modalElement.style.display = "block"; }
+        function closeModal(modalElement) { modalElement.style.display = "none"; }
+
+        function openFormModal() { openModal(addEntrySectionModal); clearForm(); }
+        function openDoerModal() { openModal(doerInfoModal); }
+        
+        function openEntryDetailsModal(entryId) {
+            const entry = allEntries.find(e => e.id === entryId); // Assuming SheetDB returns an 'id' or you map it
+            if (!entry) {
+                showUserAlert("Error: Could not find entry details.", "error");
+                return;
+            }
+            detailsModalTitle.textContent = `Entry Details - ${entry.uid}`;
+            detailsModalSubtitle.textContent = `Current Status: ${entry.status}`; 
+            populateDetailsModal(entry); 
+            openModal(entryDetailsModal);
+        }
+
+        function showUserAlert(message, type = 'info') { 
+            modalMessage.textContent = message; openModal(messageAlertModal);
+            defaultModalButtons.style.display = (type === 'confirm') ? 'none' : 'block';
+            confirmModalButtons.style.display = (type === 'confirm') ? 'flex' : 'none';
+            modalMessage.classList.remove('text-green-600', 'text-red-600');
+            if (type === 'success') modalMessage.classList.add('text-green-600');
+            if (type === 'error') modalMessage.classList.add('text-red-600');
+        }
+        function closeAlertModal() { closeModal(messageAlertModal); }
+        
+        window.onclick = (event) => { 
+            const modals = [addEntrySectionModal, doerInfoModal, entryDetailsModal, messageAlertModal];
+            modals.forEach(modal => { if (event.target == modal) closeModal(modal); });
+        }
+        
+        // --- UTILITY FUNCTIONS ---
+        function setButtonLoading(isLoading, button = submitButton, spinner = loadingSpinner) {
+            button.disabled = isLoading; button.classList.toggle('opacity-50', isLoading);
+            if (spinner) spinner.classList.toggle('hidden', !isLoading);
+        }
+        function formatDateForDisplay(dateTimeString) {
+            if (!dateTimeString) return 'N/A'; const date = new Date(dateTimeString);
+            if (isNaN(date.getTime())) return dateTimeString; 
+            return date.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+         function formatDateForInput(date) { 
+            if (!(date instanceof Date) || isNaN(date.getTime())) {
+                console.warn("formatDateForInput received an invalid date:", date, "Using current date as fallback.");
+                date = new Date(); 
+            }
+            const offset = date.getTimezoneOffset();
+            const adjustedDate = new Date(date.getTime() - (offset*60*1000));
+            return adjustedDate.toISOString().slice(0,16); 
+        }
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+        function calculateTimeDelay(actualTimestamp, plannedTimestamp) {
+            if (!actualTimestamp || !plannedTimestamp) return "<span class='text-gray-400'>N/A</span>";
+            const actual = new Date(actualTimestamp); const planned = new Date(plannedTimestamp);
+            const diff = actual.getTime() - planned.getTime();
+            const d = Math.floor(diff/(1000*60*60*24)), h = Math.floor((diff%(1000*60*60*24))/(1000*60*60)), m = Math.floor((diff%(1000*60*60))/(1000*60));
+            let delayClass = 'delay-ontime'; let delayText = "On Time";
+            if (diff > 0) { 
+                delayClass = 'delay-late';
+                if (d > 0) delayText = `${d}d late`; else if (h > 0) delayText = `${h}h late`; else if (m > 0) delayText = `${m}m late`; else delayText = "Delayed";
+            } else if (diff < 0) { 
+                 delayClass = 'delay-early';
+                 if (Math.abs(d) > 0) delayText = `${Math.abs(d)}d early`; else if (Math.abs(h) > 0) delayText = `${Math.abs(h)}h early`; else delayText = "Early";
+            }
+            return `<span class="${delayClass}">${delayText}</span>`;
+        }
+        function generateAndSetNextUid() {
+            // This function might need adjustment if SheetDB provides a reliable way to get the last UID
+            // For now, it bases it on the currently fetched entries.
+            let maxNum = 0;
+            allEntries.forEach(e => { 
+                if (e.uid && e.uid.startsWith('UID')) { 
+                    const n = parseInt(e.uid.substring(3),10); 
+                    if(!isNaN(n) && n > maxNum) maxNum = n; 
+                }
+            });
+            nextUidNumber = maxNum + 1; 
+            uidField.value = `UID${nextUidNumber.toString().padStart(2,'0')}`;
+        }
+        function clearForm() {
+            entryForm.reset(); entryTimestampField.value = formatDateForInput(new Date());
+            gstNumberInput.disabled = true; gstNumberInput.required = false; gstNumberInput.parentElement.classList.add('opacity-50');
+            requirementError.classList.add('hidden'); generateAndSetNextUid();
+        }
+        function validateRequirements() {
+            const chx = entryForm.querySelectorAll('input[name^="requirement_"]:checked');
+            requirementError.classList.toggle('hidden', chx.length > 0); return chx.length > 0;
+        }
+
+        // --- EVENT LISTENERS & INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchEntries(); gstNumberInput.disabled = true; gstNumberInput.parentElement.classList.add('opacity-50');
+            openEntryFormModalButton.addEventListener('click', openFormModal);
+            closeEntryFormModalButton.addEventListener('click', () => closeModal(addEntrySectionModal));
+            openDoerInfoModalButton.addEventListener('click', openDoerModal);
+            closeDoerInfoModalButton.addEventListener('click', () => closeModal(doerInfoModal));
+            
+            gstBillSelect.addEventListener('change', function() {
+                const isGst = this.value === 'GST Bill';
+                gstNumberInput.disabled = !isGst; gstNumberInput.required = isGst;
+                gstNumberInput.parentElement.classList.toggle('opacity-50', !isGst);
+                if (!isGst) gstNumberInput.value = '';
+            });
+            clearFormButton.addEventListener('click', clearForm); modalCancelButton.onclick = closeAlertModal;
+        });
+
+        entryForm.addEventListener('submit', async function(event) { 
+            event.preventDefault(); if (!validateRequirements()) return; setButtonLoading(true);
+            const formData = new FormData(entryForm); 
+            const entryData = {};
+            formData.forEach((v,k) => { if (!k.startsWith('requirement_')) entryData[k] = v; });
+            const reqs = []; entryForm.querySelectorAll('input[name^="requirement_"]:checked').forEach(cb => reqs.push(cb.value));
+            entryData.requirement = reqs.join(', '); 
+            entryData.systemTimestamp = new Date().toISOString(); 
+            entryData.uid = uidField.value; 
+            entryData.status = STATUS_MAP.STEP1_COMPLETE; 
+            
+            // Add a placeholder for 'id' if your sheet expects it, SheetDB might ignore it or use it
+            // Or, if SheetDB auto-generates an ID and you need it, you'll get it on the next fetch
+            entryData.id = `TEMP-${Date.now()}`; // Temporary ID, will be overwritten by SheetDB or next fetch
+
+            entryData.actualTimestamp_entry = entryData.entryTimestamp; 
+            entryData.plannedTimestamp_customerConfirmation = formatDateForInput(addDays(new Date(entryData.actualTimestamp_entry), STEP_LEAD_TIMES.customerConfirmation));
+            Object.keys(STEP_LEAD_TIMES).forEach(stepKey => { 
+                 if (stepKey !== 'customerConfirmation') entryData[`plannedTimestamp_${stepKey}`] = null;
+                 entryData[`actualTimestamp_${stepKey}`] = null;
+                 entryData[`timeDelay_${stepKey}`] = null;
+            });
+            
+            // Remove temporary ID before sending if SheetDB auto-generates
+            // delete entryData.id; 
+            // Or, if your sheet has an 'id' column and you want to suggest one (SheetDB might override)
+            // entryData.id = Utilities.getUuid(); // This won't work client-side directly
+
+            try {
+                const res = await fetch(SCRIPT_URL, { 
+                    method:'POST', 
+                    headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify({data: [entryData]}) // SheetDB expects data to be an array of objects
+                });
+                // SheetDB usually returns 201 Created on success for single row, or 200 for batch
+                if (res.ok) { 
+                    const result = await res.json(); // SheetDB might return { "created": 1 } or similar
+                    showUserAlert('Entry added successfully to SheetDB! Status: ' + STATUS_MAP.STEP1_COMPLETE, 'success'); 
+                    fetchEntries(); // Refresh data to get the actual entry from the sheet
+                    closeModal(addEntrySectionModal); 
+                } else { 
+                    const errorResult = await res.json().catch(() => ({ message: 'Unknown error, unable to parse response.' }));
+                    showUserAlert('Error adding entry to SheetDB: ' + (errorResult.error || errorResult.message || res.statusText), 'error'); 
+                }
+            } catch (e) { 
+                console.error('Error submitting entry:', e); 
+                showUserAlert('Network error while submitting entry: ' + e.message, 'error');
+            } finally { 
+                setButtonLoading(false); 
+            }
+        });
+
+        refreshButton.addEventListener('click', fetchEntries);
+        searchInput.addEventListener('input', () => { currentPage = 1; renderTable(allEntries); });
+
+        async function processStepCompletion(entryId, buttonElement, currentStepKey, nextStepKey, newStatus) {
+            setButtonLoading(true, buttonElement, null); 
+            const entryIdx = allEntries.findIndex(e => e.id === entryId);
+            if (entryIdx === -1) { 
+                showUserAlert('Error: Entry not found for update.', 'error'); 
+                setButtonLoading(false, buttonElement, null); 
+                return; 
+            }
+
+            const now = new Date();
+            const entryToUpdate = { ...allEntries[entryIdx] }; // Get a copy of the current entry state
+
+            // Prepare the fields that are changing for this specific step update
+            const dataToUpdatePayload = { 
+                status: newStatus,
+                [`actualTimestamp_${currentStepKey}`]: now.toISOString()
+            };
+            if (entryToUpdate[`plannedTimestamp_${currentStepKey}`]) {
+                dataToUpdatePayload[`timeDelay_${currentStepKey}`] = calculateTimeDelay(now, new Date(entryToUpdate[`plannedTimestamp_${currentStepKey}`])).replace(/<[^>]*>?/gm, '');
+            }
+            if (nextStepKey && STEP_LEAD_TIMES[nextStepKey]) { 
+                dataToUpdatePayload[`plannedTimestamp_${nextStepKey}`] = formatDateForInput(addDays(now, STEP_LEAD_TIMES[nextStepKey]));
+            }
+            
+            try {
+                // SheetDB uses PUT to SCRIPT_URL/column_to_match/value_to_match
+                // Assuming 'id' is the column to match and entryId is its value
+                const updateUrl = `${SCRIPT_URL}/id/${entryId}`;
+                const res = await fetch(updateUrl, { 
+                    method:'PUT', 
+                    headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify({data: dataToUpdatePayload }) // SheetDB expects data to be an object for update
+                });
+
+                if (res.ok) { 
+                    const result = await res.json(); // SheetDB might return { "updated": 1 }
+                    showUserAlert(`Entry ${entryToUpdate.uid} status updated to "${newStatus}"!`, 'success');
+                    
+                    // Update local entry immediately for UI responsiveness
+                    Object.assign(allEntries[entryIdx], dataToUpdatePayload); // Merge changes into local copy
+                     if (nextStepKey && STEP_LEAD_TIMES[nextStepKey]) { // Also update the next planned timestamp locally
+                        allEntries[entryIdx][`plannedTimestamp_${nextStepKey}`] = dataToUpdatePayload[`plannedTimestamp_${nextStepKey}`];
+                    }
+
+
+                    renderTable(allEntries); 
+                    if (entryDetailsModal.style.display === "block") {
+                        const currentModalEntryUid = detailsModalTitle.textContent.split(" - ")[1];
+                        if (entryToUpdate.uid === currentModalEntryUid) {
+                           populateDetailsModal(allEntries[entryIdx]); // Refresh the currently open details modal with updated local data
+                        }
+                    }
+                } else { 
+                    const errorResult = await res.json().catch(() => ({ message: 'Unknown error, unable to parse response.' }));
+                    showUserAlert('Error updating status in SheetDB: ' + (errorResult.error || errorResult.message || res.statusText), 'error'); 
+                }
+            } catch (e) { 
+                console.error('Error updating status:', e); 
+                showUserAlert('Network error while updating status: ' + e.message, 'error');
+            } finally { 
+                setButtonLoading(false, buttonElement, null); 
+            }
+        }
+
+        // --- ENTRY DETAILS MODAL ---
+        function populateDetailsModal(entry) {
+            detailsModalContent.innerHTML = ''; 
+            
+            const modalContentSection = entryDetailsModal.querySelector('.modal-content');
+
+            const existingControlsGroup = modalContentSection.querySelector('.modal-controls-group');
+            if (existingControlsGroup) {
+                existingControlsGroup.remove();
+            }
+
+            const controlsGroup = document.createElement('div');
+            controlsGroup.className = 'modal-controls-group';
+
+            const deleteIconButton = document.createElement('button');
+            deleteIconButton.className = 'modal-control-button delete-btn'; 
+            deleteIconButton.title = 'Delete Entry';
+            deleteIconButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm-9.007 1.188L3.61 14.5h8.78l.007-9.312zM4.5 5.5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M7.5 5.5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5"/></svg>`;
+            deleteIconButton.onclick = () => {
+                closeModal(entryDetailsModal); 
+                confirmDeleteEntry(entry.id, entry.billingName || entry.uid);
+            };
+            controlsGroup.appendChild(deleteIconButton);
+
+            const newCloseButton = document.createElement('button');
+            newCloseButton.className = 'modal-control-button close-btn';
+            newCloseButton.title = 'Close';
+            newCloseButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>`;
+            newCloseButton.onclick = () => closeModal(entryDetailsModal);
+            controlsGroup.appendChild(newCloseButton);
+            
+            if (modalContentSection) {
+                 modalContentSection.insertBefore(controlsGroup, modalContentSection.firstChild);
+            }
+
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'crm-card'; 
+
+            const overviewTitle = document.createElement('h2');
+            overviewTitle.textContent = 'Client & Deal Overview';
+            cardDiv.appendChild(overviewTitle);
+
+            const createSectionItem = (label, value, isHtml = false) => {
+                const item = document.createElement('div'); item.className = 'crm-description-item';
+                const lbl = document.createElement('div'); lbl.className = 'crm-label'; lbl.textContent = label + ':';
+                const val = document.createElement('div'); val.className = 'crm-value';
+                if (isHtml) {
+                    val.innerHTML = value || '<span class="text-gray-400">N/A</span>';
+                } else {
+                    val.textContent = value || 'N/A';
+                }
+                item.append(lbl, val);
+                return item;
+            };
+            
+            const row1 = document.createElement('div'); row1.className = 'crm-section-row';
+            const idSection = document.createElement('div'); 
+            idSection.className = 'crm-section';
+            idSection.style.cssText = '--section-color: #3f51b5; --section-bg: rgba(63, 81, 181, 0.07);';
+            idSection.innerHTML = `<div class="crm-section-header"><svg viewBox="0 0 24 24"><path d="M12 2L2 7h20L12 2zm0 2.18l6.16 3.25H5.84L12 4.18zM2 9v11h20V9H2zm2 2h16v7H4v-7z"/></svg><span>Identification & Timestamps</span></div><div class="crm-section-content"></div>`;
+            idSection.querySelector('.crm-section-content').appendChild(createSectionItem('UID', entry.uid));
+            idSection.querySelector('.crm-section-content').appendChild(createSectionItem('Entry Timestamp (S1 Actual)', formatDateForDisplay(entry.actualTimestamp_entry)));
+            idSection.querySelector('.crm-section-content').appendChild(createSectionItem('System Timestamp (Creation)', formatDateForDisplay(entry.systemTimestamp)));
+            row1.appendChild(idSection);
+
+            const clientSection = document.createElement('div'); 
+            clientSection.className = 'crm-section';
+            clientSection.style.cssText = '--section-color: #4caf50; --section-bg: rgba(76, 175, 80, 0.07);';
+            clientSection.innerHTML = `<div class="crm-section-header"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Client Details</span></div><div class="crm-section-content"></div>`;
+            clientSection.querySelector('.crm-section-content').appendChild(createSectionItem('Billing Name', entry.billingName));
+            clientSection.querySelector('.crm-section-content').appendChild(createSectionItem('Billing Address', entry.billingAddress));
+            clientSection.querySelector('.crm-section-content').appendChild(createSectionItem('Email ID', entry.emailId));
+            clientSection.querySelector('.crm-section-content').appendChild(createSectionItem('Mobile Number', entry.mobileNumber));
+            row1.appendChild(clientSection);
+            cardDiv.appendChild(row1);
+
+            const row2 = document.createElement('div'); row2.className = 'crm-section-row';
+            const dealSection = document.createElement('div'); 
+            dealSection.className = 'crm-section';
+            dealSection.style.cssText = '--section-color: #ff9800; --section-bg: rgba(255, 152, 0, 0.07);';
+            dealSection.innerHTML = `<div class="crm-section-header"><svg viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h12v2H3v-2z"/></svg><span>Deal & Billing</span></div><div class="crm-section-content"></div>`;
+            dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('Category', entry.category));
+            dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('Requirement', entry.requirement));
+            dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('GST/Non-GST', entry.gstBill));
+            if(entry.gstBill === 'GST Bill') dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('GST #', entry.gstNumber));
+            dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('Commission Tenure', entry.commissionTenure ? `${entry.commissionTenure} year(s)`: 'N/A'));
+            dealSection.querySelector('.crm-section-content').appendChild(createSectionItem('Taxable Value', entry.taxableValue ? `₹${parseFloat(entry.taxableValue).toFixed(2)}` : 'N/A'));
+            row2.appendChild(dealSection);
+
+            const assignmentSection = document.createElement('div'); 
+            assignmentSection.className = 'crm-section';
+            assignmentSection.style.cssText = '--section-color: #9c27b0; --section-bg: rgba(156, 39, 176, 0.07);';
+            assignmentSection.innerHTML = `<div class="crm-section-header"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"></path></svg><span>Assignment & Status</span></div><div class="crm-section-content"></div>`;
+            assignmentSection.querySelector('.crm-section-content').appendChild(createSectionItem('Assigned By (Entry)', entry.assignedBy));
+            assignmentSection.querySelector('.crm-section-content').appendChild(createSectionItem('Current Status', entry.status)); 
+            row2.appendChild(assignmentSection);
+            cardDiv.appendChild(row2);
+            
+            detailsModalContent.appendChild(cardDiv);
+
+            const timelineOuterSection = document.createElement('div');
+            timelineOuterSection.className = 'details-section mt-6'; 
+            const timelineTitle = document.createElement('h3');
+            timelineTitle.textContent = 'Process Timeline';
+            timelineOuterSection.appendChild(timelineTitle);
+
+            Object.keys(STEP_NAMES).forEach(stepKey => {
+                if (stepKey === 'entry') return; 
+                const stepDiv = document.createElement('div'); stepDiv.className = 'timeline-step';
+                const stepTitle = document.createElement('strong'); stepTitle.textContent = STEP_NAMES[stepKey];
+                stepDiv.appendChild(stepTitle);
+                const stepDetailsGrid = document.createElement('div'); stepDetailsGrid.className = 'timeline-details-grid mt-2'; 
+                
+                stepDetailsGrid.appendChild(createSectionItem('Planned', formatDateForDisplay(entry[`plannedTimestamp_${stepKey}`]), false)); 
+                stepDetailsGrid.appendChild(createSectionItem('Actual', formatDateForDisplay(entry[`actualTimestamp_${stepKey}`]), false)); 
+                stepDetailsGrid.appendChild(createSectionItem('Delay', entry[`timeDelay_${stepKey}`], true)); 
+                stepDiv.appendChild(stepDetailsGrid); 
+
+                let isNextActionableStep = false;
+                let actionConfig = null;
+                const currentStatus = entry.status;
+
+                if (!entry[`actualTimestamp_${stepKey}`]) { 
+                    if (currentStatus === STATUS_MAP.STEP1_COMPLETE && stepKey === 'customerConfirmation') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.customerConfirmation; }
+                    else if (currentStatus === STATUS_MAP.STEP2_COMPLETE && stepKey === 'billPreparation') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.billPreparation; }
+                    else if (currentStatus === STATUS_MAP.STEP3_COMPLETE && stepKey === 'invoiceGeneration') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.invoiceGeneration; }
+                    else if (currentStatus === STATUS_MAP.STEP4_COMPLETE && stepKey === 'billReceivingFollowup') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.billReceivingFollowup; }
+                    else if (currentStatus === STATUS_MAP.STEP5_COMPLETE && stepKey === 'paymentFollowup') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentFollowup; }
+                    else if (currentStatus === STATUS_MAP.STEP6_COMPLETE && stepKey === 'paymentReceive') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentReceive; }
+                    else if (currentStatus === STATUS_MAP.STEP7_COMPLETE && stepKey === 'dueFollowup') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.dueFollowup; }
+                    else if (currentStatus === STATUS_MAP.STEP8_COMPLETE && stepKey === 'paymentArrangement') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentArrangement; }
+                    else if (currentStatus === STATUS_MAP.STEP9_COMPLETE && stepKey === 'paymentCompletion') { isNextActionableStep = true; actionConfig = STEP_ACTION_CONFIG.paymentCompletion; }
+                }
+
+                if (isNextActionableStep && actionConfig) {
+                    const actionButton = document.createElement('button');
+                    actionButton.textContent = actionConfig.buttonText || 'Take Action';
+                    actionButton.className = `btn ${actionConfig.buttonClass || 'btn-primary'} btn-take-action`;
+                    actionButton.onclick = async () => {
+                        await processStepCompletion(entry.id, actionButton, stepKey, actionConfig.nextStepKey, actionConfig.newStatus);
+                    };
+                    stepDiv.appendChild(actionButton); 
+                }
+                timelineOuterSection.appendChild(stepDiv);
+            });
+            detailsModalContent.appendChild(timelineOuterSection);
+            console.log("populateDetailsModal finished."); 
+        }
+
+        async function fetchEntries() {
+            tableStatus.textContent = 'Loading entries from SheetDB...'; 
+            tableStatus.classList.remove('hidden');
+            entriesTableBody.innerHTML = ''; 
+            paginationControls.innerHTML = '';
+
+            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') { // Fallback to demo if URL not set
+                console.warn("SCRIPT_URL is still the placeholder. Using local demo data for fetchEntries.");
+                 if (allEntries.length === 0) { 
+                    const now = new Date(); const step1Time = new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000); 
+                    allEntries = [ 
+                        { 
+                            id: 'demo1', uid: 'UID01', entryTimestamp: formatDateForInput(step1Time), billingName: 'Alpha Services (Demo)', category: 'Residential', assignedBy: 'Sanat Majumdar', status: STATUS_MAP.STEP1_COMPLETE, 
+                            requirement: "Buy, Rent", gstBill: "GST Bill", gstNumber:"GSTALPHA123", commissionTenure:"1", taxableValue: "50000", billingAddress: "123 Alpha St", emailId:"alpha@example.com", mobileNumber:"9998887770",
+                            actualTimestamp_entry: formatDateForInput(step1Time), 
+                            plannedTimestamp_customerConfirmation: formatDateForInput(addDays(step1Time, STEP_LEAD_TIMES.customerConfirmation)), actualTimestamp_customerConfirmation: null, timeDelay_customerConfirmation: null,
+                            systemTimestamp: step1Time.toISOString()
+                        }
+                    ];
+                }
+                renderTable(allEntries); generateAndSetNextUid();
+                tableStatus.classList.toggle('hidden', allEntries.length > 0);
+                if (allEntries.length === 0) tableStatus.textContent = 'No entries (demo).'; return;
+            }
+            try {
+                const res = await fetch(SCRIPT_URL); // GET request to SheetDB
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(`Failed to fetch from SheetDB: ${res.status} ${res.statusText} - ${errorText}`);
+                }
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    allEntries = data.map(e=>({...e})).sort((a,b) => {
+                        // Sort by systemTimestamp if available, otherwise by another field like uid or id
+                        const dateA = e.systemTimestamp ? new Date(e.systemTimestamp) : 0;
+                        const dateB = b.systemTimestamp ? new Date(b.systemTimestamp) : 0;
+                        return dateB - dateA;
+                    }); 
+                    currentPage = 1; renderTable(allEntries); generateAndSetNextUid();
+                    tableStatus.classList.toggle('hidden', allEntries.length > 0);
+                    if (allEntries.length === 0) tableStatus.textContent = 'No entries found in SheetDB.';
+                } else { 
+                    tableStatus.textContent = 'Error fetching entries: Invalid data format from SheetDB.'; 
+                    showUserAlert('Error fetching entries: Invalid data format from SheetDB. Expected an array.','error'); 
+                }
+            } catch (e) { 
+                console.error('Error fetching entries:', e); 
+                tableStatus.textContent = 'Failed to load entries. Check console and SheetDB URL.'; 
+                showUserAlert('Network error while fetching entries: '+e.message,'error'); 
+            }
+        }
+        function renderTable(entries) { 
+            entriesTableBody.innerHTML = ''; paginationControls.innerHTML = ''; 
+            const searchTerm = searchInput.value.toLowerCase();
+            const filtered = entries.filter(e => [e.uid, e.entryTimestamp, e.billingName, e.status, e.category, e.assignedBy].some(v => String(v).toLowerCase().includes(searchTerm)));
+            
+            tableStatus.classList.toggle('hidden', filtered.length > 0);
+             if (filtered.length === 0) {
+                if (entries.length > 0 && searchTerm) {
+                    tableStatus.textContent = 'No entries match your search.';
+                } else if (entries.length === 0 && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                     tableStatus.textContent = 'No entries found via SheetDB.';
+                } else if (entries.length === 0) {
+                    tableStatus.textContent = 'No entries (demo mode).';
+                }
+            }
+
+
+            const paginated = filtered.slice((currentPage-1)*ITEMS_PER_PAGE, (currentPage-1)*ITEMS_PER_PAGE + ITEMS_PER_PAGE);
+            const headers = [ 
+                {key:'uid',label:'UID'}, {key:'actualTimestamp_entry',label:'Timestamp (S1)',format:formatDateForDisplay}, 
+                {key:'billingName',label:'Billing Name'}, {key:'status',label:'Status'}, 
+                {key:'category',label:'Category'}, {key:'assignedBy',label:'Assigned By'},
+                {key:'nextPlannedActionOn', label:'Next Planned On', format: (val, entry) => getNextPlannedActionTimestamp(entry)}
+            ];
+            paginated.forEach((entry, idx) => {
+                const r = entriesTableBody.insertRow(); r.className = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'; 
+                headers.forEach(h => { 
+                    const c = r.insertCell(); 
+                    const v = h.key === 'nextPlannedActionOn' ? h.format(null, entry) : entry[h.key];
+                    c.textContent = (h.key !== 'nextPlannedActionOn' && h.format) ? h.format(v) : (v||'N/A'); 
+                    c.setAttribute('data-label',h.label); c.className='px-3 py-4 whitespace-nowrap text-sm text-gray-700'; 
+                });
+                const actCell = r.insertCell(); actCell.setAttribute('data-label','Actions'); actCell.className='px-3 py-4 whitespace-nowrap text-sm text-gray-700 text-right md:text-left flex items-center space-x-1';
+                
+                const viewButton = document.createElement('button');
+                viewButton.className = 'btn btn-info btn-sm text-xs p-1 btn-icon-only';
+                viewButton.title = 'View Details';
+                viewButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/></svg>`;
+                viewButton.onclick = () => openEntryDetailsModal(entry.id); // Ensure entry.id is the correct unique key from SheetDB
+                actCell.appendChild(viewButton);
+            });
+            renderPaginationControls(filtered.length);
+        }
+        function getNextPlannedActionTimestamp(entry) {
+            if (entry.status === STATUS_MAP.STEP1_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_customerConfirmation);
+            if (entry.status === STATUS_MAP.STEP2_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_billPreparation);
+            if (entry.status === STATUS_MAP.STEP3_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_invoiceGeneration);
+            if (entry.status === STATUS_MAP.STEP4_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_billReceivingFollowup);
+            if (entry.status === STATUS_MAP.STEP5_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_paymentFollowup);
+            if (entry.status === STATUS_MAP.STEP6_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_paymentReceive);
+            if (entry.status === STATUS_MAP.STEP7_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_dueFollowup);
+            if (entry.status === STATUS_MAP.STEP8_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_paymentArrangement);
+            if (entry.status === STATUS_MAP.STEP9_COMPLETE) return formatDateForDisplay(entry.plannedTimestamp_paymentCompletion);
+            return 'N/A'; 
+        }
+
+        function renderPaginationControls(total) {
+            paginationControls.innerHTML=''; const totalPages=Math.ceil(total/ITEMS_PER_PAGE); if(totalPages<=1)return;
+            const p=Object.assign(document.createElement('button'),{textContent:'Previous',className:'btn btn-secondary text-sm',disabled:currentPage===1,onclick:()=>{if(currentPage>1){currentPage--;renderTable(allEntries);}}});
+            const n=Object.assign(document.createElement('button'),{textContent:'Next',className:'btn btn-secondary text-sm',disabled:currentPage===totalPages,onclick:()=>{if(currentPage<totalPages){currentPage++;renderTable(allEntries);}}});
+            const i=Object.assign(document.createElement('span'),{textContent:`Page ${currentPage} of ${totalPages}`,className:'px-4 py-2 text-sm text-gray-700'});
+            paginationControls.append(p,i,n);
+        }
+        function confirmDeleteEntry(id, identifier) {
+            if(!id && id !== 0){ 
+                showUserAlert('Error: Entry ID missing for deletion.','error');
+                return;
+            }
+            showUserAlert(`Are you sure you want to delete entry: "${identifier}" (ID: ${id})? This action cannot be undone.`, 'confirm');
+            modalConfirmButton.onclick = () => {
+                deleteEntry(id);
+                closeAlertModal(); 
+            };
+        }
+        async function deleteEntry(id) {
+             if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                console.warn("SCRIPT_URL is placeholder. Local demo mode for deleteEntry.");
+                // ... (demo deletion logic remains same)
+                return;
+            }
+            tableStatus.textContent='Deleting entry from SheetDB...';tableStatus.classList.remove('hidden');
+            try {
+                // SheetDB uses DELETE to SCRIPT_URL/column_to_match/value_to_match
+                // Assuming 'id' is the column to match and id is its value
+                const deleteUrl = `${SCRIPT_URL}/id/${id}`;
+                const res = await fetch(deleteUrl, { method:'DELETE' });
+
+                if(res.ok){
+                    const result = await res.json(); // SheetDB might return { "deleted": 1 } or similar
+                    showUserAlert('Entry deleted successfully from SheetDB!','success');
+                    fetchEntries(); // Refresh data from sheet
+                } else{
+                    const errorResult = await res.json().catch(() => ({ message: 'Unknown error, unable to parse response.' }));
+                    showUserAlert('Error deleting entry from SheetDB: '+(errorResult.error || errorResult.message || res.statusText),'error');
+                    tableStatus.classList.add('hidden');
+                }
+            }catch(e){
+                console.error('Error deleting entry:',e);
+                showUserAlert('Network error while deleting entry: '+e.message,'error');
+                tableStatus.classList.add('hidden');
+            } 
+        }
+    </script>
+</body>
+</html>
