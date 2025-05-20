@@ -509,9 +509,9 @@
                     <p>Welcome to the <strong>Billing Follow-up Management System (FMS)</strong>. This guide will help you understand how to add, view, and manage entries efficiently through each stage of the billing process.</p>
 
                     <div>
-                        <h2 class="text-lg font-semibold text-indigo-500 mt-3 mb-1">1. Adding a New Entry (S1)</h2>
+                        <h2 class="text-lg font-semibold text-indigo-500 mt-3 mb-1">1. Adding a New Entry</h2>
                         <ul class="list-disc list-inside ml-4 space-y-1">
-                            <li>Click the <strong class="text-indigo-600">"Add Entry (S1)"</strong> button.</li>
+                            <li>Click the <strong class="text-indigo-600">"Add Entry"</strong> button.</li>
                             <li>Fill in all required fields in the form.</li>
                             <li>The <strong>UID</strong> is auto-generated.</li>
                             <li>Select <strong>at least one “Requirement”</strong>.</li>
@@ -531,7 +531,7 @@
                     </div>
 
                     <div>
-                        <h2 class="text-lg font-semibold text-indigo-500 mt-3 mb-1">3. Processing Entries Through Stages (S2–S10)</h2>
+                        <h2 class="text-lg font-semibold text-indigo-500 mt-3 mb-1">3. Processing Entries Through Stages</h2>
                         <ul class="list-disc list-inside ml-4 space-y-1">
                             <li>Open the <strong>Entry Details</strong> page.</li>
                             <li>In the <strong>Process Timeline</strong> section:
@@ -544,12 +544,12 @@
                     </div>
                     
                     <div>
-                        <h3 class="text-md font-medium text-indigo-500 mt-3 mb-1">Special Case – Payment Receive (S7)</h3>
+                        <h3 class="text-md font-medium text-indigo-500 mt-3 mb-1">Special Case – Payment Receive</h3>
                         <ul class="list-disc list-inside ml-4 space-y-1">
                             <li>You'll be prompted to confirm if the payment is:
                                 <ul class="list-circle list-inside ml-5 space-y-1">
-                                    <li><strong>Complete</strong> → Skips to <strong>Payment Completion (S10)</strong>.</li>
-                                    <li><strong>Incomplete</strong> → Proceeds to <strong>Due Follow-up (S8)</strong>.</li>
+                                    <li><strong>Complete</strong> → Skips to <strong>Payment Completion</strong>.</li>
+                                    <li><strong>Incomplete</strong> → Proceeds to <strong>Due Follow-up</strong>.</li>
                                 </ul>
                             </li>
                             <li>The timeline displays up to the <strong>current actionable step</strong> only.</li>
@@ -663,15 +663,15 @@
         };
 
         const STEP_ACTION_CONFIG = {
-            customerConfirmation: { nextStepKey: 'billPreparation', newStatus: STATUS_MAP.STEP2_COMPLETE, buttonClass: 'btn-success', buttonText: 'Confirm (S2)' },
-            billPreparation:    { nextStepKey: 'invoiceGeneration', newStatus: STATUS_MAP.STEP3_COMPLETE, buttonClass: 'btn-warning', buttonText: 'Prepare Bill (S3)' },
-            invoiceGeneration:  { nextStepKey: 'billReceivingFollowup', newStatus: STATUS_MAP.STEP4_COMPLETE, buttonClass: 'btn-info', buttonText: 'Generate Invoice (S4)' },
-            billReceivingFollowup: { nextStepKey: 'paymentFollowup', newStatus: STATUS_MAP.STEP5_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Bill Followup Done (S5)' },
-            paymentFollowup:    { nextStepKey: 'paymentReceive', newStatus: STATUS_MAP.STEP6_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Payment Followup Done (S6)' },
-            paymentReceive:     { nextStepKey: 'dueFollowup', newStatus: STATUS_MAP.STEP7_COMPLETE, buttonClass: 'btn-success', buttonText: 'Process Payment (S7)' }, 
-            dueFollowup:        { nextStepKey: 'paymentArrangement', newStatus: STATUS_MAP.STEP8_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Due Followup Done (S8)' },
-            paymentArrangement: { nextStepKey: 'paymentCompletion', newStatus: STATUS_MAP.STEP9_COMPLETE, buttonClass: 'btn-warning', buttonText: 'Arrangement Made (S9)' },
-            paymentCompletion:  { nextStepKey: null, newStatus: STATUS_MAP.STEP10_COMPLETE, buttonClass: 'btn-success', buttonText: 'Complete Payment (S10)' }
+            customerConfirmation: { nextStepKey: 'billPreparation', newStatus: STATUS_MAP.STEP2_COMPLETE, buttonClass: 'btn-success', buttonText: 'Take Action' },
+            billPreparation:    { nextStepKey: 'invoiceGeneration', newStatus: STATUS_MAP.STEP3_COMPLETE, buttonClass: 'btn-warning', buttonText: 'Take Action' },
+            invoiceGeneration:  { nextStepKey: 'billReceivingFollowup', newStatus: STATUS_MAP.STEP4_COMPLETE, buttonClass: 'btn-info', buttonText: 'Take Action' },
+            billReceivingFollowup: { nextStepKey: 'paymentFollowup', newStatus: STATUS_MAP.STEP5_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Take Action' },
+            paymentFollowup:    { nextStepKey: 'paymentReceive', newStatus: STATUS_MAP.STEP6_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Take Action' },
+            paymentReceive:     { nextStepKey: 'dueFollowup', newStatus: STATUS_MAP.STEP7_COMPLETE, buttonClass: 'btn-success', buttonText: 'Take Action' }, 
+            dueFollowup:        { nextStepKey: 'paymentArrangement', newStatus: STATUS_MAP.STEP8_COMPLETE, buttonClass: 'btn-primary', buttonText: 'Take Action' },
+            paymentArrangement: { nextStepKey: 'paymentCompletion', newStatus: STATUS_MAP.STEP9_COMPLETE, buttonClass: 'btn-warning', buttonText: 'Take Action' },
+            paymentCompletion:  { nextStepKey: null, newStatus: STATUS_MAP.STEP10_COMPLETE, buttonClass: 'btn-success', buttonText: 'Take Action' }
         };
         
         const tableHeadersConfig = [
