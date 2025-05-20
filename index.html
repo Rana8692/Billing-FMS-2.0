@@ -9,8 +9,63 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; 
+            background-color: #f3f4f6; /* bg-gray-100 */
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
         }
+        /* Entrance Animation Styles */
+        #entranceAnimationOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.2); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); /* For Safari */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999; 
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+        #entranceAnimationOverlay.hidden {
+            opacity: 0;
+            pointer-events: none; 
+        }
+        /* CSS Spinner */
+        .spinner {
+            width: 60px; 
+            height: 60px;
+            border: 6px solid rgba(79, 70, 229, 0.3); 
+            border-top-color: #4f46e5; 
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loading-text {
+            margin-top: 1.5rem; 
+            font-size: 1.25rem; 
+            font-weight: 600; 
+            color: #374151; 
+            animation: fadeInOut 2s infinite ease-in-out;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+
         .modal {
             display: none; position: fixed; z-index: 1000; 
             left: 0; top: 0; width: 100%; height: 100%; 
@@ -28,7 +83,8 @@
             position: relative; 
         }
         #addEntrySectionModal .modal-content, 
-        #entryDetailsModal .modal-content { 
+        #entryDetailsModal .modal-content,
+        #howToUseModal .modal-content { 
             max-width: 850px; 
             max-height: 90vh; overflow-y: auto; 
         }
@@ -165,18 +221,34 @@
             min-width: 120px; 
             color: white; 
         }
-        .status-entry-added-awaiting-customer-confirmation { background-color: #fbbf24; /* Amber-400 */ color: #78350f; /* Amber-900 */ }
-        .status-customer-confirmed-awaiting-bill-prep { background-color: #a3e635; /* Lime-400 */ color: #3f6212; /* Lime-800 */ }
-        .status-bill-prepared-awaiting-invoice-generation { background-color: #67e8f9; /* Cyan-300 */ color: #155e75; /* Cyan-800 */ }
-        .status-invoice-generated-awaiting-bill-receiving-followup { background-color: #60a5fa; /* Blue-400 */ color: #1e3a8a; /* Blue-800 */ }
-        .status-bill-followed-up-awaiting-payment-followup { background-color: #818cf8; /* Indigo-400 */ color: #3730a3; /* Indigo-800 */ }
-        .status-payment-followed-up-awaiting-payment-receive { background-color: #c084fc; /* Purple-400 */ color: #581c87; /* Purple-800 */ }
-        .status-payment-received-awaiting-next-action { background-color: #34d399; /* Emerald-400 */ color: #065f46; /* Emerald-800 */ }
-        .status-due-followed-up-awaiting-payment-arrangement { background-color: #f472b6; /* Pink-400 */ color: #831843; /* Pink-800 */ }
-        .status-payment-arrangement-made-awaiting-payment-completion { background-color: #fb7185; /* Rose-400 */ color: #881337; /* Rose-800 */ }
-        .status-payment-completed { background-color: #14b8a6; /* Teal-500 */ color: white;}
-        .status-closed-lost { background-color: #ef4444; /* Red-500 */ color: white; }
-        .status-default { background-color: #9ca3af; color: white; /* Gray-400 */ }
+        .status-entry-added-awaiting-customer-confirmation { background-color: #fbbf24; color: #78350f; }
+        .status-customer-confirmed-awaiting-bill-prep { background-color: #a3e635; color: #3f6212; }
+        .status-bill-prepared-awaiting-invoice-generation { background-color: #67e8f9; color: #155e75; }
+        .status-invoice-generated-awaiting-bill-receiving-followup { background-color: #60a5fa; color: #1e3a8a; }
+        .status-bill-followed-up-awaiting-payment-followup { background-color: #818cf8; color: #3730a3; }
+        .status-payment-followed-up-awaiting-payment-receive { background-color: #c084fc; color: #581c87; }
+        .status-payment-received-awaiting-next-action { background-color: #34d399; color: #065f46; }
+        .status-due-followed-up-awaiting-payment-arrangement { background-color: #f472b6; color: #831843; }
+        .status-payment-arrangement-made-awaiting-payment-completion { background-color: #fb7185; color: #881337; }
+        .status-payment-completed { background-color: #14b8a6; color: white;}
+        .status-closed-lost { background-color: #ef4444; color: white; }
+        .status-default { background-color: #9ca3af; color: white; }
+
+        /* Class for rotating sync icon */
+        .rotate-animate {
+            animation: rotateIcon 1s linear;
+        }
+        @keyframes rotateIcon {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .main-content-area {
+            flex-grow: 1; 
+        }
 
 
         @media screen and (max-width: 768px) {
@@ -185,24 +257,68 @@
             .responsive-table td { display: block; text-align: right; font-size: 0.875rem; border-bottom: 1px solid #e5e7eb; padding-left: 50% !important; position: relative;}
             .responsive-table td::before { content: attr(data-label); position: absolute; left: 0.75rem; width: 45%; padding-right: 0.75rem; white-space: nowrap; text-align: left; font-weight: 600; color: #4b5563; }
             .responsive-table td:last-child { border-bottom: 0; }
-            .responsive-table.doer-info-table td { padding-left: 40% !important; }
-            .responsive-table.doer-info-table td::before { width: 35%; }
+            .responsive-table.doer-info-table td { padding-left: 30% !important; } 
+            .responsive-table.doer-info-table td::before { width: 25%; } 
             .main-action-buttons button { width: 100%; margin-bottom: 0.5rem;} 
             .scorecard-container { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));} 
         }
     </style>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
+<body class="bg-gray-100"> 
 
-    <div class="container mx-auto max-w-7xl bg-white p-6 md:p-8 rounded-lg shadow-xl">
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-indigo-700">Billing FMS - Sales & Accounts</h1>
-        </header>
+    <div id="entranceAnimationOverlay">
+        <div class="spinner"></div> 
+        <p class="loading-text">Loading Billing FMS...</p> 
+    </div>
 
+    <header class="sticky top-0 z-50 bg-white shadow-md">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5M12 15.75h.008v.008H12v-.008z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-lg font-bold text-gray-800">Billing FMS</p> 
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="hidden sm:block">
+                        <p id="dateTimeDisplay" class="text-xs text-gray-500"></p>
+                    </div>
+
+                    <button id="syncButton" type="button" title="Sync Data" class="p-1.5 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        <span class="sr-only">Sync Data</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                    </button>
+
+                    <button type="button" title="User Profile" class="p-1.5 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        <span class="sr-only">Open user menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content-area container mx-auto max-w-7xl bg-white p-6 md:p-8 rounded-lg shadow-xl mt-4 md:mt-6 lg:mt-8"> 
         <div class="mb-6 flex flex-wrap justify-end gap-2 main-action-buttons"> 
             <button id="openDoerInfoModalButton" class="btn btn-secondary text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1z"/></svg>
                 Responsibilities
+            </button>
+            <button id="openHowToUseModalButton" class="btn btn-secondary text-sm"> 
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle-fill" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.496 6.033h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286a.237.237 0 0 0 .241.247zm2.325 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"/>
+                </svg>
+                How to Use
             </button>
             <button id="openEntryFormModalButton" class="btn btn-primary text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z"/></svg>
@@ -270,18 +386,84 @@
                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Billing Process Responsibilities</h2>
                 <div class="table-container overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 responsive-table doer-info-table">
-                        <thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task / Stage (What)</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doer Name</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email ID</th></tr></thead>
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task / Stage (What)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doer Name</th>
+                            </tr>
+                        </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr><td data-label="Task / Stage">Detail Provide (S1)</td><td data-label="Doer Name">Sales Coordinator</td><td><a href="mailto:sc@buildwealthvealtors.com" class="text-indigo-600 hover:text-indigo-800">sc@buildwealthvealtors.com</a></td></tr>
-                            <tr class="bg-gray-50"><td data-label="Task / Stage">Confirmation from Customer (S2)</td><td data-label="Doer Name">Accounts</td><td><a href="mailto:acct.bulidwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.bulidwealthrealtors@gmail.com</a></td></tr>
-                            <tr><td data-label="Task / Stage">Bill Preparation (S3)</td><td data-label="Doer Name">Accounts</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
-                            <tr class="bg-gray-50"><td data-label="Task / Stage">Invoice Generation (S4)</td><td data-label="Doer Name">Accounts</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
-                            <tr><td data-label="Task / Stage">Bill Receiving Followup (S5)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
-                            <tr class="bg-gray-50"><td data-label="Task / Stage">Payment Followup (S6)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
-                            <tr><td data-label="Task / Stage">Payment Receive (S7)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
-                            <tr class="bg-gray-50"><td data-label="Task / Stage">Due Followup (S8)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
-                            <tr><td data-label="Task / Stage">Payment Arrangement (S9)</td><td data-label="Doer Name">Assigned Sale Person</td><td>N/A</td></tr>
-                            <tr class="bg-gray-50"><td data-label="Task / Stage">Payment Completion (S10)</td><td data-label="Doer Name">Accounts / CRM</td><td><a href="mailto:acct.buildwealthrealtors@gmail.com" class="text-indigo-600 hover:text-indigo-800">acct.buildwealthrealtors@gmail.com</a></td></tr>
+                            <tr>
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-indigo-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Detail Provide (S1)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Sales Coordinator</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-green-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Confirmation from Customer (S2)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Accounts</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-yellow-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Bill Preparation (S3)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Accounts</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                     <svg class="h-6 w-6 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227l-2.291-.682c-.362-.107-.706-.248-1.02-.414m1.02.414c-.314-.166-.626-.348-.924-.548m0 0l-.229-2.523m0 0a31.005 31.005 0 00-4.5-.26V21m0 0a31.003 31.003 0 00-4.5.26v-2.735m0 0c-.298.2-.61.381-.924.548m0 0l-.229 2.523a1.125 1.125 0 01-1.12-1.227L6.34 18m0 0l-2.06-2.06C3.902 15.58 3 14.055 3 12.372V6.75A2.25 2.25 0 015.25 4.5h13.5A2.25 2.25 0 0121 6.75v5.622c0 1.683-.902 3.208-2.28 3.788Z" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Invoice Generation (S4)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Accounts</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-purple-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.12-1.58H6.88a2.25 2.25 0 00-2.12 1.58L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Bill Receiving Followup (S5)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Accounts / CRM</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-pink-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Payment Followup (S6)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Accounts / CRM</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-emerald-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75-.75v-.75M6 13.5V12m6.75 1.5V12" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Payment Receive (S7)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Accounts / CRM</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-red-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-3.75h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Due Followup (S8)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Accounts / CRM</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-orange-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-3.741-3.741M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25V12m0 3.75V12M12 12h3.75M12 12H8.25" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Payment Arrangement (S9)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Assigned Sale Person</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td data-label="Icon" class="px-3 py-4 text-center">
+                                    <svg class="h-6 w-6 text-green-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" /></svg>
+                                </td>
+                                <td data-label="Task / Stage" class="px-6 py-4 whitespace-nowrap">Payment Completion (S10)</td>
+                                <td data-label="Doer Name" class="px-6 py-4 whitespace-nowrap">Accounts / CRM</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -297,18 +479,100 @@
             </section>
         </div></div>
 
+        <div id="howToUseModal" class="modal"><div class="modal-content-wrapper">
+            <section class="modal-content bg-white">
+                <span id="closeHowToUseModalButton" class="close-button">&times;</span>
+                <h1 class="text-2xl font-bold text-indigo-600 mb-4">How to Use the Billing FMS</h1>
+                <div class="space-y-4 text-gray-700">
+                    <p>Welcome to the <strong>Billing Follow-up Management System (FMS)</strong>. This guide will help you understand how to add, view, and manage entries efficiently through each stage of the billing process.</p>
+
+                    <div>
+                        <h2 class="text-xl font-semibold text-indigo-500 mt-3 mb-2">1. Adding a New Entry (S1)</h2>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>Click the <strong>"Add Entry (S1)"</strong> button.</li>
+                            <li>Fill in all required fields in the form.</li>
+                            <li>The <strong>UID</strong> is auto-generated.</li>
+                            <li>Select <strong>at least one “Requirement”</strong>.</li>
+                            <li>If <strong>“GST Bill”</strong> is selected, provide a valid <strong>GST Number</strong>.</li>
+                            <li>Click <strong>“Add Entry”</strong> to save the new record.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-semibold text-indigo-500 mt-3 mb-2">2. Viewing and Managing Entries</h2>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>All entries are displayed in the main table.</li>
+                            <li>Use the <strong>search bar</strong> to locate specific entries.</li>
+                            <li>Click on table headers (e.g., UID, Timestamp) to <strong>sort</strong> the records.</li>
+                            <li>Click the <span class="inline-flex items-center justify-center h-5 w-5 bg-blue-100 text-blue-600 rounded-full">👁️</span> icon in a row to view <strong>detailed information</strong>.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-semibold text-indigo-500 mt-3 mb-2">3. Processing Entries Through Stages (S2–S10)</h2>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>Open the <strong>Entry Details</strong> page.</li>
+                            <li>In the <strong>Process Timeline</strong> section:
+                                <ul class="list-circle list-inside ml-5 space-y-1">
+                                    <li>The current actionable step will show a <strong>“Take Action”</strong> button.</li>
+                                    <li>Click <strong>“Take Action”</strong> and confirm to proceed to the <strong>next stage</strong>.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-medium text-indigo-500 mt-3 mb-1">Special Case – Payment Receive (S7)</h3>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>You'll be prompted to confirm if the payment is:
+                                <ul class="list-circle list-inside ml-5 space-y-1">
+                                    <li><strong>Complete</strong> → Skips to <strong>Payment Completion (S10)</strong>.</li>
+                                    <li><strong>Incomplete</strong> → Proceeds to <strong>Due Follow-up (S8)</strong>.</li>
+                                </ul>
+                            </li>
+                            <li>The timeline displays up to the <strong>current actionable step</strong> only.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-semibold text-indigo-500 mt-3 mb-2">4. Other Actions in Entry Details</h2>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li><strong><span class="text-orange-600">🛑 Mark as Closed-Lost:</span></strong> Click the “thumbs down” icon to finalize and close the entry.</li>
+                            <li><strong><span class="text-red-600">🗑️ Delete Entry:</span></strong> Click the “trash can” icon to permanently delete the entry (confirmation required).</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-semibold text-indigo-500 mt-3 mb-2">5. Task Responsibilities</h2>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>Click the <strong>“Responsibilities”</strong> button to view who is assigned to each task in the billing process.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-semibold text-indigo-500 mt-3 mb-2">6. Syncing Data</h2>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>Click the <strong>🔄 Sync icon</strong> in the top header to refresh and load the latest data.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700">
+                        <p class="font-bold">🔧 Note:</p>
+                        <p>This guide is customized for the <strong>Billing Follow-up Management System (FMS)</strong> based on our internal workflow. If you face any issues or need help, please contact the <strong>MIS Executive</strong> for support and clarification.</p>
+                    </div>
+                </div>
+                <div class="mt-6 text-right">
+                    <button type="button" id="okHowToUseModalButton" class="btn btn-primary">OK</button>
+                </div>
+            </section>
+        </div></div>
+
 
         <section id="entriesListSection" class="mb-10">
             <h2 class="text-2xl font-semibold text-gray-700 mb-6">All Recorded Entries</h2>
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-2 sm:space-y-0">
                 <input type="text" id="searchInput" placeholder="Search entries..." class="p-2 border border-gray-300 rounded-md shadow-sm w-full sm:w-auto">
-                <div class="flex space-x-2">
-                    <button id="refreshButton" class="btn btn-secondary text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
-                        Refresh Data
-                    </button>
                 </div>
-            </div>
             <div id="tableStatus" class="text-center p-4 text-gray-500">Loading entries...</div>
             <div class="table-container overflow-x-auto bg-white rounded-lg shadow">
                 <table class="min-w-full divide-y divide-gray-200 responsive-table">
@@ -333,10 +597,16 @@
                 </div>
         </div>
     </div></div>
+    
+    <footer class="py-6 text-center text-sm text-gray-500">
+        © 2025 Build Wealth Realtors. All rights reserved.
+    </footer>
 
     <script>
         // --- CONFIGURATION & GLOBAL VARS ---
-        const SCRIPT_URL = 'https://sheetdb.io/api/v1/nydthm8eqg4w4'; 
+        const VIEW_ENTRIES_URL = 'https://script.google.com/macros/s/AKfycby6f7A3twTLR4hIbwAQSK0kAtm4iekmEjKxeS6L_5D4499VjIkqQ0vCfwfyrcESL3gH/exec'; 
+        const MODIFY_ENTRIES_URL = 'https://sheetdb.io/api/v1/nydthm8eqg4w4'; 
+        
         const ITEMS_PER_PAGE = 10;
         let currentPage = 1;
         let allEntries = [];
@@ -411,6 +681,12 @@
         const doerInfoModal = document.getElementById('doerInfoModal');
         const openDoerInfoModalButton = document.getElementById('openDoerInfoModalButton');
         const closeDoerInfoModalButton = document.getElementById('closeDoerInfoModalButton');
+        
+        const howToUseModal = document.getElementById('howToUseModal'); 
+        const openHowToUseModalButton = document.getElementById('openHowToUseModalButton'); 
+        const closeHowToUseModalButton = document.getElementById('closeHowToUseModalButton'); 
+        const okHowToUseModalButton = document.getElementById('okHowToUseModalButton'); 
+
 
         const entryDetailsModal = document.getElementById('entryDetailsModal'); 
         const detailsModalTitle = document.getElementById('detailsModalTitle');
@@ -429,7 +705,7 @@
         const entriesTableHead = document.getElementById('entriesTableHead'); 
         const entriesTableBody = document.getElementById('entriesTableBody');
         const tableStatus = document.getElementById('tableStatus');
-        const refreshButton = document.getElementById('refreshButton');
+        // const refreshButton = document.getElementById('refreshButton'); // Removed
         const searchInput = document.getElementById('searchInput');
         const paginationControls = document.getElementById('paginationControls');
 
@@ -439,6 +715,7 @@
         const scorecardInvoiceGenerated = document.getElementById('scorecardInvoiceGenerated');
         const scorecardPaymentFollowup = document.getElementById('scorecardPaymentFollowup');
         const scorecardPaymentCompleted = document.getElementById('scorecardPaymentCompleted');
+        const entranceAnimationOverlay = document.getElementById('entranceAnimationOverlay');
 
 
         // --- MODAL CONTROL FUNCTIONS ---
@@ -447,6 +724,7 @@
 
         function openFormModal() { openModal(addEntrySectionModal); clearForm(); }
         function openDoerModal() { openModal(doerInfoModal); }
+        function openHowToUse() { openModal(howToUseModal); } 
         
         function openEntryDetailsModal(entryId) {
             const entry = allEntries.find(e => e.id === entryId); 
@@ -504,7 +782,7 @@
         function closeAlertModal() { closeModal(messageAlertModal); }
         
         window.onclick = (event) => { 
-            const modals = [addEntrySectionModal, doerInfoModal, entryDetailsModal, messageAlertModal];
+            const modals = [addEntrySectionModal, doerInfoModal, entryDetailsModal, messageAlertModal, howToUseModal]; 
             modals.forEach(modal => { if (event.target == modal) closeModal(modal); });
         }
         
@@ -720,6 +998,9 @@
             closeEntryFormModalButton.addEventListener('click', () => closeModal(addEntrySectionModal));
             openDoerInfoModalButton.addEventListener('click', openDoerModal);
             closeDoerInfoModalButton.addEventListener('click', () => closeModal(doerInfoModal));
+            openHowToUseModalButton.addEventListener('click', openHowToUse); 
+            closeHowToUseModalButton.addEventListener('click', () => closeModal(howToUseModal)); 
+            okHowToUseModalButton.addEventListener('click', () => closeModal(howToUseModal)); 
             
             gstBillSelect.addEventListener('change', function() {
                 const isGst = this.value === 'GST Bill';
@@ -728,6 +1009,26 @@
                 if (!isGst) gstNumberInput.value = '';
             });
             clearFormButton.addEventListener('click', clearForm); modalCancelButton.onclick = closeAlertModal;
+
+             // Dashboard Header JS
+            updateDateTime();
+            setInterval(updateDateTime, 1000); 
+
+            const syncButton = document.getElementById('syncButton');
+            if (syncButton) {
+                syncButton.addEventListener('click', () => {
+                    const svgIcon = syncButton.querySelector('svg');
+                    if (svgIcon) {
+                        svgIcon.classList.add('rotate-animate');
+                        console.log("Syncing data via dashboard header button...");
+                        fetchEntries(); 
+                        setTimeout(() => {
+                            svgIcon.classList.remove('rotate-animate');
+                            console.log("Sync complete.");
+                        }, 1000); 
+                    }
+                });
+            }
         });
 
         entryForm.addEventListener('submit', async function(event) { 
@@ -738,7 +1039,6 @@
             const reqs = []; entryForm.querySelectorAll('input[name^="requirement_"]:checked').forEach(cb => reqs.push(cb.value));
             entryData.requirement = reqs.join(', '); 
             
-            entryData.id = `entry-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             entryData.uid = uidField.value; 
             entryData.status = STATUS_MAP.STEP1_COMPLETE; 
             
@@ -755,18 +1055,18 @@
             entryData.isFullPaymentReceived = null; 
             
             try {
-                const res = await fetch(SCRIPT_URL, { 
+                const res = await fetch(MODIFY_ENTRIES_URL, { 
                     method:'POST', 
                     headers:{'Content-Type':'application/json'}, 
                     body:JSON.stringify({data: [entryData]}) 
                 });
                 if (res.ok) { 
-                    showUserAlert('Entry added successfully to SheetDB! Status: ' + STATUS_MAP.STEP1_COMPLETE, 'success'); 
+                    showUserAlert('Entry added successfully! Status: ' + STATUS_MAP.STEP1_COMPLETE, 'success'); 
                     fetchEntries(); 
                     closeModal(addEntrySectionModal); 
                 } else { 
                     const errorResult = await res.json().catch(() => ({ message: 'Unknown error, unable to parse response.' }));
-                    showUserAlert('Error adding entry to SheetDB: ' + (errorResult.error || errorResult.message || res.statusText), 'error'); 
+                    showUserAlert('Error adding entry: ' + (errorResult.error || errorResult.message || res.statusText), 'error'); 
                 }
             } catch (e) { 
                 console.error('Error submitting entry:', e); 
@@ -776,7 +1076,7 @@
             }
         });
 
-        refreshButton.addEventListener('click', fetchEntries);
+        // refreshButton.addEventListener('click', fetchEntries); // Removed this line
         searchInput.addEventListener('input', () => { currentPage = 1; applySorting(); renderTable(allEntries); });
 
 
@@ -828,14 +1128,13 @@
 
 
             try {
-                const updateUrl = `${SCRIPT_URL}/id/${entryId}`;
+                const updateUrl = `${MODIFY_ENTRIES_URL}/id/${entryId}`; 
                 const res = await fetch(updateUrl, {
-                    method: 'PUT',
+                    method: 'PUT', 
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: dataToUpdatePayload })
+                    body: JSON.stringify({ data: dataToUpdatePayload }) 
                 });
-
-                if (res.ok) {
+                if (res.ok) { 
                     showUserAlert(`Entry ${entryToUpdateLocally.uid} status updated to "${dataToUpdatePayload.status}"!`, 'success');
                     Object.assign(allEntries[entryIdx], dataToUpdatePayload);
                      if (dataToUpdatePayload.hasOwnProperty('isFullPaymentReceived')) {
@@ -852,7 +1151,7 @@
                 }
             } catch (e) {
                 console.error('Error updating status:', e);
-                showUserAlert('Network error: ' + e.message, 'error');
+                showUserAlert('Network error while updating status: ' + e.message, 'error');
             } finally {
                 setButtonLoading(false, buttonElement, null);
             }
@@ -870,7 +1169,9 @@
             const entryToUpdate = { ...allEntries[entryIdx] };
             const newStatus = STATUS_MAP.CLOSED_LOST;
             
-            const dataToUpdatePayload = { status: newStatus };
+            const dataToUpdatePayload = { 
+                status: newStatus 
+            };
             Object.keys(STEP_LEAD_TIMES).forEach(stepKey => {
                 dataToUpdatePayload[`plannedTimestamp_${stepKey}`] = null;
                 dataToUpdatePayload[`actualTimestamp_${stepKey}`] = entryToUpdate[`actualTimestamp_${stepKey}`] || null; 
@@ -879,13 +1180,12 @@
             dataToUpdatePayload.isFullPaymentReceived = null; 
 
             try {
-                const updateUrl = `${SCRIPT_URL}/id/${entryId}`;
+                const updateUrl = `${MODIFY_ENTRIES_URL}/id/${entryId}`; 
                 const res = await fetch(updateUrl, {
-                    method: 'PUT',
+                    method: 'PUT', 
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: dataToUpdatePayload })
                 });
-
                 if (res.ok) {
                     showUserAlert(`Entry ${entryToUpdate.uid} marked as "${newStatus}"!`, 'success');
                     Object.assign(allEntries[entryIdx], dataToUpdatePayload);
@@ -1151,6 +1451,7 @@
             const currentStepKey = 'paymentReceive';
 
             const dataToUpdatePayload = {
+                id: entryId, 
                 status: STATUS_MAP.STEP7_COMPLETE,
                 [`actualTimestamp_${currentStepKey}`]: formatDateForDisplay(now),
                 isFullPaymentReceived: isFullPaymentReceived 
@@ -1184,13 +1485,14 @@
             }
 
             try {
-                const updateUrl = `${SCRIPT_URL}/id/${entryId}`;
-                const res = await fetch(updateUrl, {
-                    method: 'PUT',
+                 const updateUrl = `${MODIFY_ENTRIES_URL}/id/${entryId}`; 
+                 const res = await fetch(updateUrl, {
+                    method: 'PUT', 
+                    mode: 'cors', 
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: dataToUpdatePayload })
+                    body: JSON.stringify({ data: dataToUpdatePayload}) 
                 });
-                if (res.ok) {
+                if (res.ok) { 
                     showUserAlert(`Payment Receive (S7) processed as ${isFullPaymentReceived ? 'Fully Paid' : 'Incomplete'}.`, 'success');
                     Object.assign(allEntries[entryIdx], dataToUpdatePayload);
                     applySorting(); renderTable(allEntries);
@@ -1210,13 +1512,15 @@
 
 
         async function fetchEntries() {
-            tableStatus.textContent = 'Loading entries from SheetDB...'; 
+            tableStatus.textContent = 'Loading entries...'; 
             tableStatus.classList.remove('hidden');
             entriesTableBody.innerHTML = ''; 
             paginationControls.innerHTML = '';
+            const entranceOverlay = document.getElementById('entranceAnimationOverlay');
 
-            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') { 
-                console.warn("SCRIPT_URL is still the placeholder. Using local demo data for fetchEntries.");
+
+            if (VIEW_ENTRIES_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') { 
+                console.warn("VIEW_ENTRIES_URL is still the placeholder. Using local demo data for fetchEntries.");
                  if (allEntries.length === 0) { 
                     const now = new Date(); const step1Time = new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000); 
                     allEntries = [ 
@@ -1234,40 +1538,55 @@
                 applySorting(); 
                 renderTable(allEntries); generateAndSetNextUid();
                 tableStatus.classList.toggle('hidden', allEntries.length > 0);
-                if (allEntries.length === 0) tableStatus.textContent = 'No entries (demo).'; return;
+                if (allEntries.length === 0) tableStatus.textContent = 'No entries (demo).'; 
+                if(entranceOverlay) entranceOverlay.classList.add('hidden'); 
+                return;
             }
             try {
-                const res = await fetch(SCRIPT_URL); 
+                const res = await fetch(`${VIEW_ENTRIES_URL}?action=getEntries`); 
                 if (!res.ok) {
                     const errorText = await res.text();
-                    throw new Error(`Failed to fetch from SheetDB: ${res.status} ${res.statusText} - ${errorText}`);
+                    throw new Error(`Failed to fetch: ${res.status} ${res.statusText} - ${errorText}`);
                 }
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    allEntries = data.map(e=>({...e, 
-                        isFullPaymentReceived: e.isFullPaymentReceived === 'true' ? true : (e.isFullPaymentReceived === 'false' ? false : null)
-                    })).sort((a,b) => {
-                        let dateA, dateB;
-                        try { dateA = new Date(a.systemTimestamp.replace(/-/g, " ").replace(" AM", "").replace(" PM", "")); } catch { dateA = 0; }
-                        try { dateB = new Date(b.systemTimestamp.replace(/-/g, " ").replace(" AM", "").replace(" PM", "")); } catch { dateB = 0; }
-                        if (isNaN(dateA.getTime())) dateA = 0;
-                        if (isNaN(dateB.getTime())) dateB = 0;
-                        return dateB - dateA; 
-                    }); 
-                    currentPage = 1; 
-                    applySorting(); 
-                    renderTable(allEntries); 
-                    generateAndSetNextUid();
-                    tableStatus.classList.toggle('hidden', allEntries.length > 0);
-                    if (allEntries.length === 0) tableStatus.textContent = 'No entries found in SheetDB.';
-                } else { 
-                    tableStatus.textContent = 'Error fetching entries: Invalid data format from SheetDB.'; 
-                    showUserAlert('Error fetching entries: Invalid data format from SheetDB. Expected an array.','error'); 
+                const result = await res.json();
+                console.log('Raw response from Apps Script:', result); 
+
+                let dataToProcess = [];
+                if (result && result.success && Array.isArray(result.data)) { 
+                    dataToProcess = result.data;
+                } else if (Array.isArray(result)) { 
+                     console.warn("Apps Script returned a direct array. Expected {success: true, data: [...]}. Adapting...");
+                    dataToProcess = result;
+                } else {
+                    tableStatus.textContent = 'Error fetching entries: '+(result.message ||'Invalid data format received from script.'); 
+                    showUserAlert('Error fetching entries: '+(result.message ||'Invalid data format received from script.'),'error'); 
+                    if(entranceOverlay) entranceOverlay.classList.add('hidden');
+                    return; 
                 }
+                
+                allEntries = dataToProcess.map(e=>({...e, 
+                    isFullPaymentReceived: e.isFullPaymentReceived === 'true' ? true : (e.isFullPaymentReceived === 'false' ? false : null)
+                })).sort((a,b) => {
+                    let dateA, dateB;
+                    try { dateA = new Date(a.systemTimestamp.replace(/-/g, " ").replace(" AM", "").replace(" PM", "")); } catch { dateA = 0; }
+                    try { dateB = new Date(b.systemTimestamp.replace(/-/g, " ").replace(" AM", "").replace(" PM", "")); } catch { dateB = 0; }
+                    if (isNaN(dateA.getTime())) dateA = 0;
+                    if (isNaN(dateB.getTime())) dateB = 0;
+                    return dateB - dateA; 
+                }); 
+                currentPage = 1; 
+                applySorting(); 
+                renderTable(allEntries); 
+                generateAndSetNextUid();
+                tableStatus.classList.toggle('hidden', allEntries.length > 0);
+                if (allEntries.length === 0) tableStatus.textContent = 'No entries found.';
+                
             } catch (e) { 
                 console.error('Error fetching entries:', e); 
-                tableStatus.textContent = 'Failed to load entries. Check console and SheetDB URL.'; 
+                tableStatus.textContent = 'Failed to load entries. Check console and SCRIPT_URL.'; 
                 showUserAlert('Network error while fetching entries: '+e.message,'error'); 
+            } finally {
+                if(entranceOverlay) entranceOverlay.classList.add('hidden'); 
             }
         }
         function renderTable(entries) { 
@@ -1281,8 +1600,8 @@
              if (filtered.length === 0) {
                 if (entries.length > 0 && searchTerm) {
                     tableStatus.textContent = 'No entries match your search.';
-                } else if (entries.length === 0 && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
-                     tableStatus.textContent = 'No entries found via SheetDB.';
+                } else if (entries.length === 0 && VIEW_ENTRIES_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') { 
+                     tableStatus.textContent = 'No entries found.';
                 } else if (entries.length === 0) {
                     tableStatus.textContent = 'No entries (demo mode).';
                 }
@@ -1401,8 +1720,8 @@
             });
         }
         async function deleteEntry(id) {
-             if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
-                console.warn("SCRIPT_URL is placeholder. Local demo mode for deleteEntry.");
+             if (VIEW_ENTRIES_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') { 
+                console.warn("Using local demo mode for deleteEntry.");
                 const entryIndex = allEntries.findIndex(e => e.id === id.toString()); 
                 if (entryIndex > -1) {
                     const deletedEntryIdentifier = allEntries[entryIndex].billingName || allEntries[entryIndex].uid;
@@ -1415,18 +1734,17 @@
                 }
                 return;
             }
-            tableStatus.textContent='Deleting entry from SheetDB...';tableStatus.classList.remove('hidden');
+            tableStatus.textContent='Deleting entry...';tableStatus.classList.remove('hidden');
             try {
-                const deleteUrl = `${SCRIPT_URL}/id/${id}`;
+                const deleteUrl = `${MODIFY_ENTRIES_URL}/id/${id}`; 
                 const res = await fetch(deleteUrl, { method:'DELETE' });
 
                 if(res.ok){
-                    const result = await res.json(); 
-                    showUserAlert('Entry deleted successfully from SheetDB!','success');
+                    showUserAlert('Entry deleted successfully!','success');
                     fetchEntries(); 
                 } else{
                     const errorResult = await res.json().catch(() => ({ message: 'Unknown error, unable to parse response.' }));
-                    showUserAlert('Error deleting entry from SheetDB: '+(errorResult.error || errorResult.message || res.statusText),'error');
+                    showUserAlert('Error deleting entry: '+(errorResult.error || errorResult.message || res.statusText),'error');
                     tableStatus.classList.add('hidden');
                 }
             }catch(e){
@@ -1436,6 +1754,39 @@
             } 
         }
 
+        // Dashboard Header JS
+        function updateDateTime() {
+            const dateTimeDisplay = document.getElementById('dateTimeDisplay');
+            if (dateTimeDisplay) {
+                const now = new Date();
+                const options = { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                };
+                dateTimeDisplay.textContent = now.toLocaleString('en-US', options);
+            }
+        }
+
+        const dashboardSyncButton = document.getElementById('syncButton'); 
+        if (dashboardSyncButton) {
+            dashboardSyncButton.addEventListener('click', () => {
+                const svgIcon = dashboardSyncButton.querySelector('svg');
+                if (svgIcon) {
+                    svgIcon.classList.add('rotate-animate');
+                    console.log("Syncing data via dashboard header button...");
+                    fetchEntries(); 
+                    setTimeout(() => {
+                        svgIcon.classList.remove('rotate-animate');
+                        console.log("Sync complete.");
+                    }, 1000); 
+                }
+            });
+        }
         
     </script>
 </body>
